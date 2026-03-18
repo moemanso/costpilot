@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CostPilot Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-secondary: #8b949e;
+      --accent: #58a6ff;
+      --success: #3fb950;
+      --warning: #d29922;
+      --danger: #f85149;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    h1 { font-size: 1.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    h1 span { color: var(--accent); }
+    
+    .api-key-input {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-family: monospace;
+      width: 300px;
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+    
+    .card h3 {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.75rem;
+    }
+    
+    .card .value {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    
+    .card .value.success { color: var(--success); }
+    .card .value.warning { color: var(--warning); }
+    .card .value.danger { color: var(--danger); }
+    
+    .card .subtext {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+    }
+    
+    .table-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .table-card h3 {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 1rem;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th, td {
+      padding: 0.875rem 1.5rem;
+      text-align: left;
+    }
+    
+    th {
+      background: var(--bg-tertiary);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+    
+    td {
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+    }
+    
+    tr:last-child td { border-bottom: none; }
+    
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .badge.success { background: rgba(63,185,80,0.2); color: var(--success); }
+    .badge.warning { background: rgba(210,153,34,0.2); color: var(--warning); }
+    .badge.danger { background: rgba(248,81,73,0.2); color: var(--danger); }
+    
+    .refresh-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    
+    .refresh-btn:hover { background: var(--border); }
+    
+    .loading {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    
+    .error {
+      background: rgba(248,81,73,0.1);
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .tab {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    
+    .tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    
+    .section { display: none; }
+    .section.active { display: block; }
+    
+    @media (max-width: 768px) {
+      .container { padding: 1rem; }
+      .grid { grid-template-columns: 1fr; }
+      .api-key-input { width: 100%; }
+      header { flex-direction: column; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🚀 <span>CostPilot</span> Dashboard</h1>
+      <div>
+        <input type="text" id="apiKey" class="api-key-input" placeholder="Enter API Key (x-api-key header)" />
+      </div>
+    </header>
+    
+    <div id="error" class="error" style="display: none;"></div>
+    
+    <div class="grid">
+      <div class="card">
+        <h3>Total Spend</h3>
+        <div class="value" id="totalSpend">$0.00</div>
+        <div class="subtext" id="totalRequests">0 requests</div>
+      </div>
+      
+      <div class="card">
+        <h3>Cache Savings</h3>
+        <div class="value success" id="cacheSavings">$0.00</div>
+        <div class="subtext" id="cacheRate">0% hit rate</div>
+      </div>
+      
+      <div class="card">
+        <h3>Routing Savings</h3>
+        <div class="value success" id="routingSavings">$0.00</div>
+        <div class="subtext">From smart model selection</div>
+      </div>
+      
+      <div class="card">
+        <h3>Budget Status</h3>
+        <div class="value" id="budgetPercent">0%</div>
+        <div class="subtext" id="budgetLimit">$100/month limit</div>
+      </div>
+    </div>
+    
+    <div class="tabs">
+      <button class="tab active" data-section="models">Models</button>
+      <button class="tab" data-section="users">Users</button>
+      <button class="tab" data-section="cache">Cache</button>
+    </div>
+    
+    <div class="section active" id="models-section">
+      <div class="table-card">
+        <h3>Model Usage</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Provider</th>
+              <th>Model</th>
+              <th>Tier</th>
+              <th>Requests</th>
+              <th>Input Tokens</th>
+              <th>Output Tokens</th>
+              <th>Total Cost</th>
+            </tr>
+          </thead>
+          <tbody id="modelsTable">
+            <tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="section" id="users-section">
+      <div class="table-card">
+        <h3>User Costs</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Total Requests</th>
+              <th>Total Cost</th>
+              <th>Savings</th>
+            </tr>
+          </thead>
+          <tbody id="usersTable">
+            <tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="section" id="cache-section">
+      <div class="grid" style="margin-bottom: 0;">
+        <div class="card">
+          <h3>Cache Status</h3>
+          <div class="value" id="cacheEnabled">-</div>
+          <div class="subtext" id="cacheEntries">0 entries</div>
+        </div>
+        
+        <div class="card">
+          <h3>Hit Rate</h3>
+          <div class="value" id="cacheHitRate">0%</div>
+          <div class="subtext" id="cacheHits">0 hits, 0 misses</div>
+        </div>
+        
+        <div class="card">
+          <h3>TTL</h3>
+          <div class="value" id="cacheTtl">-</div>
+          <div class="subtext">Time to live</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const API_KEY_HEADER = 'x-api-key';
+    const API_BASE = '';
+    
+    function getApiKey() {
+      return document.getElementById('apiKey').value.trim();
+    }
+    
+    function getHeaders() {
+      const key = getApiKey();
+      return {
+        'Content-Type': 'application/json',
+        [API_KEY_HEADER]: key
+      };
+    }
+    
+    function showError(msg) {
+      const el = document.getElementById('error');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    
+    function hideError() {
+      document.getElementById('error').style.display = 'none';
+    }
+    
+    async function fetchStats() {
+      hideError();
+      const key = getApiKey();
+      if (!key) {
+        showError('Please enter your API key');
+        return;
+      }
+      
+      try {
+        const [statsRes, modelsRes, usersRes, cacheRes] = await Promise.all([
+          fetch('/api/stats', { headers: getHeaders() }),
+          fetch('/api/models', { headers: getHeaders() }),
+          fetch('/api/users', { headers: getHeaders() }),
+          fetch('/api/cache/stats', { headers: getHeaders() })
+        ]);
+        
+        if (!statsRes.ok) throw new Error('Failed to fetch stats');
+        
+        const stats = await statsRes.json();
+        const models = await modelsRes.json();
+        const users = await usersRes.json();
+        const cache = await cacheRes.json();
+        
+        if (!stats.success) throw new Error(stats.error);
+        
+        // Update UI
+        const costs = stats.costs;
+        document.getElementById('totalSpend').textContent = `$${costs.totalSpend.toFixed(4)}`;
+        document.getElementById('totalRequests').textContent = `${costs.totalRequests} requests`;
+        
+        const savings = costs.savingsFromCache + costs.savingsFromRouting;
+        document.getElementById('cacheSavings').textContent = `$${savings.toFixed(4)}`;
+        
+        const hitRate = stats.cache.hitRate;
+        document.getElementById('cacheRate').textContent = `${hitRate} hit rate`;
+        
+        document.getElementById('routingSavings').textContent = `$${costs.savingsFromRouting.toFixed(4)}`;
+        
+        // Budget (mock - would need project context)
+        document.getElementById('budgetPercent').textContent = 'N/A';
+        
+        // Models table
+        if (models.models && models.models.length > 0) {
+          document.getElementById('modelsTable').innerHTML = models.models.map(m => `
+            <tr>
+              <td><span class="badge">${m.provider}</span></td>
+              <td><code>${m.model}</code></td>
+              <td>${m.tier}</td>
+              <td>${m.totalRequests}</td>
+              <td>${m.totalInputTokens.toLocaleString()}</td>
+              <td>${m.totalOutputTokens.toLocaleString()}</td>
+              <td>$${m.totalSpend}</td>
+            </tr>
+          `).join('');
+        } else {
+          document.getElementById('modelsTable').innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-secondary);">No model data yet</td></tr>';
+        }
+        
+        // Users table
+        if (users.users && users.users.length > 0) {
+          document.getElementById('usersTable').innerHTML = users.users.map(u => `
+            <tr>
+              <td><code>${u.userId.substring(0, 20)}...</code></td>
+              <td>${u.totalRequests}</td>
+              <td>$${u.totalSpend}</td>
+              <td class="success">$${u.savingsTotal}</td>
+            </tr>
+          `).join('');
+        } else {
+          document.getElementById('usersTable').innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">No user data yet</td></tr>';
+        }
+        
+        // Cache stats
+        const cs = cache.cache;
+        document.getElementById('cacheEnabled').textContent = cs.enabled ? 'Enabled' : 'Disabled';
+        document.getElementById('cacheEntries').textContent = `${cs.entries} / ${cs.maxEntries}`;
+        document.getElementById('cacheHitRate').textContent = cs.hitRate;
+        document.getElementById('cacheHits').textContent = `${cs.hits} hits, ${cs.misses} misses`;
+        document.getElementById('cacheTtl').textContent = `${cs.ttlSeconds}s`;
+        
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+    
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.section + '-section').classList.add('active');
+      });
+    });
+    
+    // Auto-refresh every 30 seconds
+    document.getElementById('apiKey').addEventListener('change', fetchStats);
+    fetchStats();
+    setInterval(fetchStats, 30000);
+  </script>
+</body>
+</html>

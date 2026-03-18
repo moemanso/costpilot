@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CostPilot - Smart AI Chat</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-secondary: #8b949e;
+      --accent: #58a6ff;
+      --success: #3fb950;
+      --warning: #d29922;
+      --danger: #f85149;
+      --sidebar-width: 280px;
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.25s ease;
+      --transition-slow: 0.4s ease;
+    }
+
+    /* Theme support */
+    body.light {
+      --bg: #ffffff;
+      --bg-secondary: #f6f8fa;
+      --bg-tertiary: #eaeef2;
+      --border: #d0d7de;
+      --text: #24292f;
+      --text-secondary: #57606a;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      transition: background var(--transition-normal), color var(--transition-normal);
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      transition: width var(--transition-normal), transform var(--transition-normal), background var(--transition-normal);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar.collapsed {
+      width: 60px;
+      padding: 1rem 0.5rem;
+    }
+
+    .sidebar.collapsed .logo-text,
+    .sidebar.collapsed .stats,
+    .sidebar.collapsed .budget-section,
+    .sidebar.collapsed .nav-links {
+      opacity: 0;
+      visibility: hidden;
+      width: 0;
+    }
+
+    .sidebar-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 0.5rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+      z-index: 10;
+    }
+
+    .sidebar-toggle:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .sidebar.collapsed .sidebar-toggle {
+      right: 50%;
+      transform: translateX(50%);
+    }
+    
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: margin var(--transition-normal);
+    }
+
+    .sidebar.collapsed .logo {
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    
+    .logo span { color: var(--accent); }
+
+    .nav-links {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      transition: opacity var(--transition-fast);
+    }
+
+    .nav-links a {
+      flex: 1;
+      text-align: center;
+      padding: 0.5rem;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.75rem;
+      transition: all var(--transition-fast);
+    }
+
+    .nav-links a:hover {
+      background: var(--bg-tertiary);
+      color: var(--text);
+    }
+    
+    .stats {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      transition: opacity var(--transition-fast);
+    }
+    
+    .stat-card {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 1rem;
+      transition: all var(--transition-fast);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+      transition: color var(--transition-fast);
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      transition: transform var(--transition-fast);
+    }
+
+    .stat-card:hover .stat-value {
+      transform: scale(1.02);
+    }
+    
+    .stat-value.saved { color: var(--success); }
+    
+    .budget-section {
+      margin-top: auto;
+      transition: opacity var(--transition-fast);
+    }
+    
+    .budget-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .budget-slider {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .budget-slider:hover {
+      accent-color: var(--success);
+    }
+    
+    /* Main Chat Area */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .chat-header {
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .message {
+      max-width: 70%;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      line-height: 1.5;
+      animation: messageIn 0.3s ease forwards;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    @keyframes messageIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .message.user {
+      align-self: flex-end;
+      background: var(--accent);
+    }
+    
+    .message.assistant {
+      align-self: flex-start;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .message:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .message .meta {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+    }
+    
+    .message.user .meta {
+      color: rgba(255,255,255,0.7);
+    }
+    
+    .cost-badge {
+      display: inline-block;
+      background: var(--bg-tertiary);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      margin-left: 0.5rem;
+    }
+
+    .cost-badge:hover {
+      transform: scale(1.1);
+    }
+    
+    .cost-badge.savings { color: var(--success); }
+    
+    /* Input Area */
+    .input-area {
+      padding: 1.5rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--bg-secondary);
+      transition: background var(--transition-normal);
+    }
+    
+    .api-key-prompt {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .api-key-prompt label {
+      display: block;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .api-key-prompt input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.875rem;
+    }
+    
+    .api-key-prompt input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    
+    .input-row {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    .input-row input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all var(--transition-fast);
+    }
+    
+    .input-row input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+    }
+    
+    .input-row button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    
+    .input-row button:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+    }
+    
+    .input-row button:active {
+      transform: translateY(0);
+    }
+    
+    .input-row button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Loading Indicator */
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 0.5rem;
+    }
+
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: typing 1.4s infinite ease-in-out;
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { 
+        transform: translateY(0); 
+        opacity: 0.5;
+      }
+      30% { 
+        transform: translateY(-8px); 
+        opacity: 1;
+      }
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Thinking message with glow */
+    .message.thinking {
+      background: var(--bg-secondary);
+      border: 1px solid var(--accent);
+      box-shadow: 0 0 20px rgba(88, 166, 255, 0.15);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeInOverlay 0.25s ease;
+    }
+
+    @keyframes fadeInOverlay {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .modal-overlay.hidden { 
+      display: none; 
+      animation: fadeOutOverlay 0.25s ease;
+    }
+
+    @keyframes fadeOutOverlay {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      animation: modalSlideIn 0.3s ease;
+    }
+
+    @keyframes modalSlideIn {
+      from { 
+        opacity: 0; 
+        transform: scale(0.95) translateY(-20px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+      }
+    }
+    
+    .modal h2 {
+      margin-bottom: 1rem;
+    }
+    
+    .modal p {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+    
+    .modal input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-family: monospace;
+      margin-bottom: 1rem;
+      transition: all var(--transition-fast);
+    }
+
+    .modal input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+    }
+    
+    .modal button {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .modal button:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+    }
+    
+    .help-text {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+    }
+    
+    .demo-badge {
+      background: var(--success);
+      color: var(--bg);
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(63, 185, 80, 0); }
+    }
+    
+    .demo-btn {
+      width: 100%;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    
+    .demo-btn:hover {
+      border-color: var(--success);
+      color: var(--success);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(63, 185, 80, 0.2);
+    }
+
+    /* Header buttons */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .header-actions button,
+    .header-actions a {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: all var(--transition-fast);
+    }
+
+    .header-actions button:hover,
+    .header-actions a:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .theme-toggle {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .nav a {
+      transition: all var(--transition-fast);
+    }
+
+    .nav a:hover {
+      background: var(--bg-tertiary);
+    }
+    
+    .demo-btn:hover {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .hidden { display: none !important; }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+      
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 1rem;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      
+      .logo {
+        font-size: 1.25rem;
+        margin-bottom: 0;
+        width: 100%;
+      }
+      
+      .stats {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+      
+      .stat-card {
+        flex: 1;
+        min-width: 80px;
+        padding: 0.5rem;
+      }
+      
+      .stat-value {
+        font-size: 1rem;
+      }
+      
+      .budget-section {
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+      
+      .chat-header {
+        padding: 0.75rem 1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+      }
+      
+      .chat-messages {
+        padding: 1rem;
+      }
+      
+      .message {
+        max-width: 85%;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+      }
+      
+      .input-area {
+        padding: 1rem;
+      }
+      
+      .input-row {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      
+      .input-row button {
+        padding: 0.875rem;
+      }
+      
+      .api-key-prompt {
+        padding: 0.75rem;
+      }
+      
+      .modal {
+        padding: 1.5rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .sidebar {
+        padding: 0.75rem;
+      }
+      
+      .stat-card {
+        min-width: 60px;
+      }
+      
+      .stat-label {
+        font-size: 0.65rem;
+      }
+      
+      .stat-value {
+        font-size: 0.875rem;
+      }
+      
+      .chat-header span {
+        font-size: 0.875rem;
+      }
+      
+      .chat-messages {
+        padding: 0.75rem;
+        gap: 0.75rem;
+      }
+      
+      .message {
+        max-width: 90%;
+        padding: 0.6255rem 0.875rem;
+        font-size: 0.9rem;
+      }
+      
+      .input-area {
+        padding: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- API Key Modal -->
+  <div class="modal-overlay" id="apiModal">
+    <div class="modal">
+      <h2>🔑 Connect Your OpenAI Key</h2>
+      <p>Paste your OpenAI API key to start chatting. Your key stays in your browser - we never store it.</p>
+      <input type="password" id="apiKeyInput" placeholder="sk-..." />
+      <button onclick="saveApiKey()">Start Chatting</button>
+      <button onclick="startDemo()" class="demo-btn" style="margin-top: 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--success); color: var(--success);">🚀 Try Demo Mode</button>
+      <p class="help-text">Get your key from <a href="https://platform.openai.com/api-keys" target="_blank" style="color: var(--accent);">platform.openai.com</a></p>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
+    <div class="logo">🚀 <span class="logo-text">CostPilot</span></div>
+    
+    <div class="nav-links">
+      <a href="/chat">💬 Chat</a>
+      <a href="/dashboard">📊</a>
+      <a href="/settings">⚙️</a>
+    </div>
+    
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Total Spent</div>
+        <div class="stat-value" id="totalSpent">$0.00</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Saved</div>
+        <div class="stat-value saved" id="totalSaved">$0.00</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Savings Rate</div>
+        <div class="stat-value saved" id="savingsRate">0%</div>
+      </div>
+    </div>
+    
+    <div class="budget-section">
+      <div class="budget-label">
+        <span>Monthly Budget</span>
+        <span id="budgetValue">$100</span>
+      </div>
+      <input type="range" class="budget-slider" id="budgetSlider" min="10" max="200" value="100" oninput="updateBudget(this.value)">
+    </div>
+  </div>
+
+  <!-- Main Chat -->
+  <div class="main">
+    <div class="chat-header">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar" style="position: static; width: 32px; height: 32px;">☰</button>
+        <span style="color: var(--text-secondary);">Smart chat that saves you money</span>
+        <nav style="display: flex; gap: 0.5rem;">
+          <a href="/dashboard" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; padding: 0.25rem 0.5rem; border-radius: 4px;">📊 Dashboard</a>
+          <a href="/settings" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; padding: 0.25rem 0.5rem; border-radius: 4px;">⚙️ Settings</a>
+        </nav>
+      </div>
+      <div class="header-actions">
+        <span id="demoBadge" class="demo-badge hidden">🔶 DEMO MODE</span>
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle" title="Toggle Theme">🌙</button>
+        <button onclick="showApiModal()">🔑 Change Key</button>
+      </div>
+    </div>
+    
+    <div class="chat-messages" id="chatMessages">
+      <div class="message assistant">
+        Hi! I'm CostPilot - your smart AI chat assistant. I route your questions to the cheapest model that can handle them, saving you up to 80% vs. using GPT-4 directly.
+        <div class="meta">Using gpt-4o-mini for simple questions</div>
+      </div>
+    </div>
+    
+    <div class="input-area">
+      <div class="api-key-prompt" id="apiKeyPrompt">
+        <label>OpenAI API Key</label>
+        <input type="password" id="chatApiKey" placeholder="sk-..." />
+      </div>
+      <div class="input-row">
+        <input type="text" id="messageInput" placeholder="Ask me anything... (Ctrl+Enter to send)" onkeydown="handleKeyPress(event)" />
+        <button onclick="sendMessage()" id="sendBtn">Send</button>
+      </div>
+      <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.5rem; text-align: right;">
+        💡 Tip: Press Ctrl+Enter or Cmd+Enter to send quickly
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let apiKey = localStorage.getItem('costpilot_apikey') || '';
+    let budget = parseInt(localStorage.getItem('costpilot_budget')) || 100;
+    let isDemoMode = localStorage.getItem('costpilot_demo') === 'true';
+    let sidebarCollapsed = localStorage.getItem('costpilot_sidebar_collapsed') === 'true';
+    let isDarkTheme = localStorage.getItem('costpilot_theme') !== 'light';
+    
+    // Apply saved theme
+    if (!isDarkTheme) {
+      document.body.classList.add('light');
+      document.getElementById('themeToggle').textContent = '☀️';
+    }
+    
+    // Apply saved sidebar state
+    if (sidebarCollapsed) {
+      document.getElementById('sidebar').classList.add('collapsed');
+    }
+    
+    // Theme toggle function
+    function toggleTheme() {
+      isDarkTheme = !isDarkTheme;
+      document.body.classList.toggle('light', !isDarkTheme);
+      document.getElementById('themeToggle').textContent = isDarkTheme ? '🌙' : '☀️';
+      localStorage.setItem('costpilot_theme', isDarkTheme ? 'dark' : 'light');
+    }
+    
+    // Sidebar toggle function
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebarCollapsed = !sidebarCollapsed;
+      sidebar.classList.toggle('collapsed', sidebarCollapsed);
+      localStorage.setItem('costpilot_sidebar_collapsed', sidebarCollapsed);
+    }
+    
+    // Show modal if no API key and not in demo mode
+    if (!apiKey && !isDemoMode) {
+      document.getElementById('apiModal').classList.remove('hidden');
+      document.getElementById('apiKeyPrompt').classList.add('hidden');
+    } else if (isDemoMode) {
+      document.getElementById('apiModal').classList.add('hidden');
+      document.getElementById('apiKeyPrompt').classList.add('hidden');
+      document.getElementById('demoBadge').classList.remove('hidden');
+    } else {
+      document.getElementById('apiModal').classList.add('hidden');
+      document.getElementById('apiKeyPrompt').classList.add('hidden');
+      document.getElementById('chatApiKey').value = apiKey;
+    }
+    
+    document.getElementById('budgetSlider').value = budget;
+    document.getElementById('budgetValue').textContent = '$' + budget;
+    
+    function showApiModal() {
+      document.getElementById('apiModal').classList.remove('hidden');
+    }
+    
+    function startDemo() {
+      isDemoMode = true;
+      localStorage.setItem('costpilot_demo', 'true');
+      document.getElementById('apiModal').classList.add('hidden');
+      document.getElementById('apiKeyPrompt').classList.add('hidden');
+      document.getElementById('demoBadge').classList.remove('hidden');
+      // Add welcome message for demo mode
+      addMessage("Welcome to Demo Mode! 🚀\n\nYou can try me out without an API key. I'll show you how CostPilot works with realistic responses, costs, and savings.\n\nTry asking me about coding, writing, analysis, or any general question!", 'assistant');
+    }
+    
+    function saveApiKey() {
+      const input = document.getElementById('apiKeyInput');
+      if (input.value.trim().startsWith('sk-')) {
+        apiKey = input.value.trim();
+        localStorage.setItem('costpilot_apikey', apiKey);
+        localStorage.setItem('costpilot_demo', 'false');
+        isDemoMode = false;
+        document.getElementById('apiModal').classList.add('hidden');
+        document.getElementById('chatApiKey').value = apiKey;
+        document.getElementById('demoBadge').classList.add('hidden');
+      } else {
+        alert('Please enter a valid OpenAI API key (starts with sk-)');
+      }
+    }
+    
+    function updateBudget(value) {
+      budget = value;
+      localStorage.setItem('costpilot_budget', value);
+      document.getElementById('budgetValue').textContent = '$' + value;
+    }
+    
+    function handleKeyPress(e) {
+      // Cmd+Enter (Mac) or Ctrl+Enter (Windows/Linux) to send
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+    
+    async function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const message = input.value.trim();
+      const chatApiKey = document.getElementById('chatApiKey').value || apiKey;
+      
+      if (!message) return;
+      if (!chatApiKey && !isDemoMode) {
+        showApiModal();
+        return;
+      }
+      
+      // Add user message
+      addMessage(message, 'user');
+      input.value = '';
+      
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = true;
+      sendBtn.innerHTML = '<span class="loading-spinner"></span>...';
+      
+      // Show typing indicator
+      showTypingIndicator();
+      
+      try {
+        // Use demo endpoint if in demo mode
+        const endpoint = isDemoMode ? '/api/demo/chat' : '/api/chat';
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            message, 
+            apiKey: isDemoMode ? undefined : chatApiKey,
+            budget: budget
+          })
+        });
+        
+        const data = await res.json();
+        
+        // Remove typing indicator
+        hideTypingIndicator();
+        
+        if (data.error) {
+          const errorMessage = handleApiError(data.error, data.errorType);
+          addMessage(errorMessage, 'assistant');
+        } else {
+          addMessage(data.response, 'assistant', data.cost, data.saved, data.model);
+          updateStats(data.totalSpent, data.totalSaved);
+          
+          // Show demo badge if response indicates demo mode
+          if (data.isDemo && !isDemoMode) {
+            isDemoMode = true;
+            document.getElementById('demoBadge').classList.remove('hidden');
+          }
+        }
+      } catch (err) {
+        // Remove typing indicator
+        hideTypingIndicator();
+        
+        let errorMsg = 'Connection error. Please try again.';
+        if (err.message && err.message.includes('Failed to fetch')) {
+          errorMsg = '🌐 Network error. Please check your internet connection and try again.';
+        }
+        addMessage(errorMsg, 'assistant');
+      }
+      
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = 'Send';
+    }
+    
+    // Handle API errors with better messages
+    function handleApiError(error, errorType) {
+      const messages = {
+        invalid_api_key: '🔑 Invalid API Key. Please check your OpenAI API key in settings.',
+        rate_limit: '⏳ Rate limit exceeded. Please wait a moment before sending another message.',
+        quota_exceeded: '💳 API quota exceeded. Please check your OpenAI account billing.',
+        budget_exceeded: '💰 Budget exceeded! Your monthly spending limit has been reached.',
+        network_error: '🌐 Network error. Please check your internet connection.'
+      };
+      
+      return messages[errorType] || error || 'An error occurred. Please try again.';
+    }
+    
+    function showTypingIndicator() {
+      const container = document.getElementById('chatMessages');
+      const indicator = document.createElement('div');
+      indicator.id = 'typingIndicator';
+      indicator.className = 'message assistant thinking';
+      indicator.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div><div class="meta">Thinking...</div>';
+      container.appendChild(indicator);
+      container.scrollTop = container.scrollHeight;
+    }
+    
+    function hideTypingIndicator() {
+      const indicator = document.getElementById('typingIndicator');
+      if (indicator) {
+        indicator.remove();
+      }
+    }
+    
+    function addMessage(text, role, cost, saved, model) {
+      const container = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = 'message ' + role;
+      
+      let meta = '';
+      if (role === 'assistant' && cost !== undefined) {
+        meta = `<div class="meta">Cost: $${cost.toFixed(4)}${saved ? ` <span class="cost-badge savings">Saved $${saved.toFixed(4)}</span>` : ''} • Model: ${model}</div>`;
+      } else if (role === 'assistant') {
+        meta = `<div class="meta">Model: ${model || 'gpt-4o-mini'}</div>`;
+      }
+      
+      div.innerHTML = text + meta;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+    
+    function updateStats(spent, saved) {
+      document.getElementById('totalSpent').textContent = '$' + (spent || 0).toFixed(2);
+      document.getElementById('totalSaved').textContent = '$' + (saved || 0).toFixed(2);
+      
+      const rate = spent + saved > 0 ? ((saved / (spent + saved)) * 100).toFixed(0) : 0;
+      document.getElementById('savingsRate').textContent = rate + '%';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "costpilot-v2",
+  "version": "2.0.0",
+  "description": "Simple web chat with AI cost optimization",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "js-yaml": "^4.1.0"
+  }
+}

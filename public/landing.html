@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CostPilot - Stop Overpaying for AI</title>
+  <meta name="description" content="Save 70-80% on your OpenAI bills with intelligent model routing">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --text-secondary: #8b949e;
+      --accent: #58a6ff;
+      --accent-glow: rgba(88, 166, 255, 0.4);
+      --success: #3fb950;
+      --gradient-start: #1a1f2e;
+      --gradient-end: #0d1117;
+    }
+    
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    
+    /* Animated background */
+    .bg-pattern {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at 20% 50%, rgba(88, 166, 255, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(63, 185, 80, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 40% 80%, rgba(88, 166, 255, 0.04) 0%, transparent 30%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Navigation */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 0;
+    }
+    
+    .logo {
+      font-size: 1.75rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      letter-spacing: -0.5px;
+    }
+    
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+    
+    .logo span { 
+      background: linear-gradient(135deg, #fff 0%, var(--text-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+    
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+    
+    .nav-links a:hover { color: var(--text); }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: none;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #79b8ff 100%);
+      color: #0d1117;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px var(--accent-glow);
+    }
+    
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--bg-secondary);
+      border-color: var(--accent);
+    }
+    
+    /* Hero */
+    .hero {
+      padding: 6rem 0 4rem;
+      text-align: center;
+      position: relative;
+    }
+    
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+    
+    .hero-badge .dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      letter-spacing: -1px;
+    }
+    
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, var(--success) 0%, #7ee787 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+    }
+    
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+      margin-top: 5rem;
+      padding-top: 3rem;
+      border-top: 1px solid var(--border);
+    }
+    
+    .hero-stat {
+      text-align: center;
+    }
+    
+    .hero-stat-value {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--success);
+      display: block;
+    }
+    
+    .hero-stat-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    
+    /* Dashboard Preview */
+    .dashboard-section {
+      padding: 4rem 0;
+    }
+    
+    .dashboard-preview {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      position: relative;
+    }
+    
+    .dashboard-mockup {
+      position: relative;
+      padding: 1rem;
+      background: var(--bg);
+    }
+    
+    .mockup-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding: 0 0.5rem;
+    }
+    
+    .mockup-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    
+    .mockup-dot.red { background: #ff5f57; }
+    .mockup-dot.yellow { background: #ffbd2e; }
+    .mockup-dot.green { background: #28ca41; }
+    
+    .mockup-content {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      overflow: hidden;
+      min-height: 320px;
+    }
+    
+    .mockup-sidebar {
+      background: var(--bg-tertiary);
+      padding: 1.5rem;
+      border-right: 1px solid var(--border);
+    }
+    
+    .mockup-logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+    
+    .mockup-stat {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .mockup-stat-label {
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+    
+    .mockup-stat-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    
+    .mockup-stat-value.green { color: var(--success); }
+    
+    .mockup-main {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .mockup-chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .mockup-message {
+      max-width: 80%;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    
+    .mockup-message.user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: #0d1117;
+    }
+    
+    .mockup-message.assistant {
+      align-self: flex-start;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+    }
+    
+    .mockup-input {
+      margin-top: auto;
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .mockup-input-field {
+      flex: 1;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.85rem;
+    }
+    
+    .mockup-input-btn {
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.25rem;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    
+    .dashboard-label {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    
+    /* Features */
+    .features {
+      padding: 5rem 0;
+    }
+    
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+    
+    .section-header h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      letter-spacing: -0.5px;
+    }
+    
+    .section-header p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .feature-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    
+    .feature-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+    
+    .feature-card p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+    
+    /* How It Works */
+    .how-it-works {
+      padding: 5rem 0;
+    }
+    
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+    
+    .step {
+      text-align: center;
+      padding: 2rem;
+    }
+    
+    .step-number {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #0d1117;
+      margin: 0 auto 1.5rem;
+    }
+    
+    .step h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .step p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+    
+    /* CTA Section */
+    .cta-section {
+      padding: 6rem 0;
+      text-align: center;
+    }
+    
+    .cta-box {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 4rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(88, 166, 255, 0.15) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    
+    .cta-box h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    
+    .cta-box p {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    
+    /* Footer */
+    footer {
+      padding: 3rem 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    
+    footer p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hero { padding: 4rem 0 3rem; }
+      .hero-stats { flex-direction: column; gap: 2rem; }
+      .mockup-content { grid-template-columns: 1fr; }
+      .mockup-sidebar { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-pattern"></div>
+  
+  <div class="container">
+    <!-- Navigation -->
+    <nav>
+      <div class="logo">
+        <div class="logo-icon">🚀</div>
+        <span>CostPilot</span>
+      </div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="/chat" class="btn btn-secondary">Open App</a>
+        <a href="/chat" class="btn btn-primary">Try Now →</a>
+      </div>
+    </nav>
+    
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        Save up to 80% on AI costs
+      </div>
+      
+      <h1>Stop Overpaying<br>for <span class="highlight">AI</span></h1>
+      
+      <p>CostPilot intelligently routes your ChatGPT queries to the cheapest model that can handle them — no setup required. Get the same answers for a fraction of the price.</p>
+      
+      <div class="hero-cta">
+        <a href="/chat" class="btn btn-primary">Start Saving Now →</a>
+        <a href="#how-it-works" class="btn btn-secondary">See How It Works</a>
+      </div>
+      
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-value">70-80%</span>
+          <span class="hero-stat-label">Average Savings</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">$0</span>
+          <span class="hero-stat-label">Setup Cost</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">Instant</span>
+          <span class="hero-stat-label">Integration</span>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Dashboard Preview -->
+    <section class="dashboard-section">
+      <div class="dashboard-preview">
+        <div class="dashboard-mockup">
+          <div class="mockup-header">
+            <span class="mockup-dot red"></span>
+            <span class="mockup-dot yellow"></span>
+            <span class="mockup-dot green"></span>
+          </div>
+          <div class="mockup-content">
+            <div class="mockup-sidebar">
+              <div class="mockup-logo">🚀 CostPilot</div>
+              <div class="mockup-stat">
+                <div class="mockup-stat-label">Total Spent</div>
+                <div class="mockup-stat-value">$23.40</div>
+              </div>
+              <div class="mockup-stat">
+                <div class="mockup-stat-label">Total Saved</div>
+                <div class="mockup-stat-value green">$67.80</div>
+              </div>
+              <div class="mockup-stat">
+                <div class="mockup-stat-label">Savings Rate</div>
+                <div class="mockup-stat-value green">74%</div>
+              </div>
+            </div>
+            <div class="mockup-main">
+              <div class="mockup-chat">
+                <div class="mockup-message user">Explain quantum computing in simple terms</div>
+                <div class="mockup-message assistant">Quantum computing uses quantum mechanics to process information... <span style="color: var(--success); font-size: 0.75rem;">(gpt-4o-mini • Saved $0.002)</span></div>
+                <div class="mockup-message user">Write a Python function to sort a list</div>
+                <div class="mockup-message assistant">Here's a simple sorting function... <span style="color: var(--success); font-size: 0.75rem;">(gpt-4o-mini • Saved $0.001)</span></div>
+              </div>
+              <div class="mockup-input">
+                <div class="mockup-input-field">Ask anything...</div>
+                <button class="mockup-input-btn">Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="dashboard-label">Your savings tracked in real-time</p>
+    </section>
+    
+    <!-- Features -->
+    <section class="features" id="features">
+      <div class="section-header">
+        <h2>Smart Savings, Zero Effort</h2>
+        <p>Everything you need to cut AI costs without compromising on quality</p>
+      </div>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🧠</div>
+          <h3>Smart Routing</h3>
+          <p>Automatically selects the best model for each query. Simple questions go to cheap models; complex ones use GPT-4.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">💰</div>
+          <h3>Budget Caps</h3>
+          <p>Set your monthly limit and get warned when you're approaching it. Never surprise bills again.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Live Savings</h3>
+          <p>See exactly how much you've saved in real-time. Track spending and savings by day, week, or month.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Simple Setup</h3>
+          <p>Just paste your OpenAI key and start chatting. No API keys to manage, no configuration needed.</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+      <div class="section-header">
+        <h2>How It Works</h2>
+        <p>Start saving in three simple steps</p>
+      </div>
+      
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Paste Your API Key</h3>
+          <p>Enter your OpenAI API key in the app. It stays in your browser — we never see or store it.</p>
+        </div>
+        
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>Start Chatting</h3>
+          <p>Use CostPilot just like regular ChatGPT. Ask questions, get answers, same experience.</p>
+        </div>
+        
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Save Automatically</h3>
+          <p>We route each query to the cheapest capable model. Watch your savings add up in real-time.</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- CTA -->
+    <section class="cta-section">
+      <div class="cta-box">
+        <h2>Ready to Stop Overpaying?</h2>
+        <p>Join thousands of developers saving 70-80% on their OpenAI bills</p>
+        <div class="cta-buttons">
+          <a href="/chat" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem;">Try CostPilot Free →</a>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer>
+      <p>🚀 CostPilot — Smart AI routing for less</p>
+    </footer>
+  </div>
+</body>
+</html>
