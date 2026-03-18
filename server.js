@@ -554,7 +554,7 @@ app.post('/api/clear', (req, res) => {
   res.json({ success: true });
 });
 
-const PORT = config.server.port || 3000;
+const PORT = process.env.PORT || config.server.port || 3000;
 app.listen(PORT, () => {
-  console.log(`CostPilot v2 running at http://localhost:${PORT}`);
+  console.log(`CostPilot v2 running on port ${PORT}`);
 });
