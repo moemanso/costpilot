@@ -1,20 +1,9 @@
 {
-  "builds": [
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "handle": "filesystem" },
-    { "src": "/chat", "dest": "/public/index.html" },
-    { "src": "/dashboard", "dest": "/public/dashboard.html" },
-    { "src": "/settings", "dest": "/public/settings.html" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/chat", "dest": "/public/index.html" },
+    { "source": "/dashboard", "dest": "/public/dashboard.html" },
+    { "source": "/settings", "dest": "/public/settings.html" },
+    { "source": "/(.*)", "dest": "/public/$1" }
   ]
 }
