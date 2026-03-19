@@ -1046,6 +1046,15 @@
       
       // Check if we have any API keys
       const hasAnyKey = Object.values(apiKeys).some(key => key !== '');
+      console.log('[DEBUG Frontend] API Keys available:', {
+        openai: apiKeys.openai ? 'sk-...' + apiKeys.openai.slice(-4) : '',
+        anthropic: apiKeys.anthropic ? 'sk-ant-...' + apiKeys.anthropic.slice(-4) : '',
+        gemini: apiKeys.gemini ? 'AIza...' + apiKeys.gemini.slice(-4) : '',
+        openrouter: apiKeys.openrouter ? 'sk-or-...' + apiKeys.openrouter.slice(-4) : '',
+        hasAnyKey,
+        isDemoMode
+      });
+      
       if (!hasAnyKey && !isDemoMode) {
         showApiModal();
         return;
@@ -1065,16 +1074,24 @@
       try {
         // Use demo endpoint if in demo mode
         const endpoint = isDemoMode ? '/api/demo/chat' : '/api/chat';
+        const requestBody = { 
+          message, 
+          apiKeys: isDemoMode ? undefined : apiKeys,
+          budget: budget,
+          autoSelect: autoSelect,
+          preferredProvider: preferredProvider
+        };
+        console.log('[DEBUG Frontend] Sending request to:', endpoint, 'keys:', requestBody.apiKeys ? {
+          openai: requestBody.apiKeys.openai ? 'sk-...' + requestBody.apiKeys.openai.slice(-4) : '',
+          anthropic: requestBody.apiKeys.anthropic ? 'sk-ant-...' + requestBody.apiKeys.anthropic.slice(-4) : '',
+          gemini: requestBody.apiKeys.gemini ? 'AIza...' + requestBody.apiKeys.gemini.slice(-4) : '',
+          openrouter: requestBody.apiKeys.openrouter ? 'sk-or-...' + requestBody.apiKeys.openrouter.slice(-4) : ''
+        } : 'none');
+        
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            message, 
-            apiKeys: isDemoMode ? undefined : apiKeys,
-            budget: budget,
-            autoSelect: autoSelect,
-            preferredProvider: preferredProvider
-          })
+          body: JSON.stringify(requestBody)
         });
         
         const data = await res.json();

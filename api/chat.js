@@ -92,7 +92,21 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { message, apiKey, sessionId, budget } = req.body;
+    const { message, apiKey, sessionId, budget, preferredProvider } = req.body;
+    
+    // DEBUG: Log incoming API keys (masked for security)
+    console.log('[DEBUG] Received request:', { 
+      hasMessage: !!message, 
+      hasApiKey: !!apiKey,
+      hasApiKeys: !!req.body.apiKeys,
+      preferredProvider: preferredProvider,
+      apiKeysMasked: req.body.apiKeys ? {
+        openai: req.body.apiKeys.openai ? 'sk-...' + req.body.apiKeys.openai.slice(-4) : '',
+        anthropic: req.body.apiKeys.anthropic ? 'sk-ant-...' + req.body.apiKeys.anthropic.slice(-4) : '',
+        gemini: req.body.apiKeys.gemini ? 'AIza...' + req.body.apiKeys.gemini.slice(-4) : '',
+        openrouter: req.body.apiKeys.openrouter ? 'sk-or-...' + req.body.apiKeys.openrouter.slice(-4) : ''
+      } : {}
+    });
     
     if (!message?.trim()) {
       return res.status(400).json({ error: 'Message is required' });
@@ -177,22 +191,26 @@ module.exports = async function handler(req, res) {
     if (typeof apiKeys === 'object') {
       // Check each key for known prefixes to detect provider
       // Priority: OpenRouter > Anthropic > Google > OpenAI
+      // Support both 'gemini' and 'google' key names for Google
+      const googleKey = apiKeys.gemini || apiKeys.google;
       if (apiKeys.openrouter && (apiKeys.openrouter.startsWith('sk-or-') || apiKeys.openrouter.startsWith('sk-or-v1-'))) {
         provider = 'openrouter';
         activeApiKey = apiKeys.openrouter;
       } else if (apiKeys.anthropic && apiKeys.anthropic.startsWith('sk-ant-')) {
         provider = 'anthropic';
         activeApiKey = apiKeys.anthropic;
-      } else if (apiKeys.google && apiKeys.google.startsWith('AIza')) {
+      } else if (googleKey && googleKey.startsWith('AIza')) {
         provider = 'google';
-        activeApiKey = apiKeys.google;
+        activeApiKey = googleKey;
       } else if (apiKeys.openai && apiKeys.openai.startsWith('sk-')) {
         provider = 'openai';
         activeApiKey = apiKeys.openai;
       } else {
         // Fallback: use first non-empty key
-        activeApiKey = apiKeys.openai || apiKeys.anthropic || apiKeys.google || apiKeys.openrouter || '';
+        activeApiKey = apiKeys.openai || apiKeys.anthropic || googleKey || apiKeys.openrouter || '';
       }
+      // DEBUG: Log which provider was selected
+      console.log('[DEBUG] Provider selected:', provider, 'activeApiKey prefix:', activeApiKey ? activeApiKey.substring(0, 10) : 'none');
     } else {
       // Single key string - detect provider from format
       activeApiKey = apiKeys || '';
@@ -224,7 +242,28 @@ module.exports = async function handler(req, res) {
     // Determine complexity and select model
     const complexity = analyzeComplexity(message);
     
-    // Set model based on detected provider
+    // If preferredProvider is specified, override automatic detection
+    if (preferredProvider && preferredProvider !== 'auto') {
+      console.log('[DEBUG] Using preferred provider:', preferredProvider);
+      provider = preferredProvider;
+      // Set the appropriate key and model based on preference
+      if (preferredProvider === 'openrouter' && apiKeys.openrouter) {
+        activeApiKey = apiKeys.openrouter;
+        model = 'openai/gpt-4o-mini';
+      } else if (preferredProvider === 'anthropic' && apiKeys.anthropic) {
+        activeApiKey = apiKeys.anthropic;
+        model = 'claude-3-haiku-20240307';
+      } else if ((preferredProvider === 'google' || preferredProvider === 'gemini') && (apiKeys.gemini || apiKeys.google)) {
+        provider = 'google';
+        activeApiKey = apiKeys.gemini || apiKeys.google;
+        model = 'gemini-1.5-pro';
+      } else if (preferredProvider === 'openai' && apiKeys.openai) {
+        activeApiKey = apiKeys.openai;
+        model = 'gpt-4o-mini';
+      }
+    }
+    
+    // Set model based on detected provider (if not overridden above)
     if (provider === 'openrouter') {
       model = 'openai/gpt-4o-mini';
     } else if (provider === 'anthropic') {
@@ -259,6 +298,11 @@ module.exports = async function handler(req, res) {
         messages: session.messages.slice(-10),
         max_tokens: complexity === 'simple' ? 50 : complexity === 'medium' ? 500 : 2000
       };
+      // DEBUG: Log OpenRouter request
+      console.log('[DEBUG] OpenRouter API call:', { 
+        keyPrefix: activeApiKey ? activeApiKey.substring(0, 10) : 'none',
+        model: apiBody.model 
+      });
     } else if (provider === 'anthropic') {
       apiUrl = 'https://api.anthropic.com/v1/messages';
       apiHeaders = {
@@ -294,6 +338,14 @@ module.exports = async function handler(req, res) {
     if (!response.ok) {
       const errorData = await response.json();
       const errorMessage = errorData.error?.message || errorData.message || 'API request failed';
+      
+      // DEBUG: Log error details
+      console.log('[DEBUG] API Error:', {
+        status: response.status,
+        provider: provider,
+        error: errorMessage,
+        errorData: errorData
+      });
       
       // Better error classification
       if (response.status === 401 || errorMessage.includes('invalid') || errorMessage.includes('Incorrect')) {
