@@ -376,7 +376,7 @@
       </div>
       <div class="form-group">
         <label>Preferred Provider</label>
-        <select id="preferredProvider">
+        <select id="selectedProvider">
           <option value="auto">🤖 Auto (Smart Routing)</option>
           <option value="openai">OpenAI (GPT-4o)</option>
           <option value="anthropic">Anthropic (Claude)</option>
@@ -426,7 +426,7 @@
     const budget = parseInt(localStorage.getItem('costpilot_budget')) || 100;
     const isDemo = localStorage.getItem('costpilot_demo') === 'true';
     const autoSelect = localStorage.getItem('costpilot_auto_select') !== 'false';
-    const preferredProvider = localStorage.getItem('costpilot_preferred_provider') || 'auto';
+    const selectedProvider = localStorage.getItem('costpilot_preferred_provider') || 'auto';
     
     // Set API key fields (masked)
     document.getElementById('apiKeyOpenAI').value = apiKeyOpenAI ? '••••••••••••••••' + apiKeyOpenAI.slice(-4) : '';
@@ -434,7 +434,7 @@
     document.getElementById('apiKeyGemini').value = apiKeyGemini ? '••••••••••••••••' + apiKeyGemini.slice(-4) : '';
     document.getElementById('apiKeyOpenRouter').value = apiKeyOpenRouter ? '••••••••••••••••' + apiKeyOpenRouter.slice(-4) : '';
     document.getElementById('budget').value = budget;
-    document.getElementById('preferredProvider').value = preferredProvider;
+    document.getElementById('selectedProvider').value = selectedProvider;
     
     if (isDemo) {
       document.getElementById('demoToggle').classList.add('active');
@@ -571,7 +571,7 @@
     }
     
     // Save preferred provider when changed
-    document.getElementById('preferredProvider').addEventListener('change', function() {
+    document.getElementById('selectedProvider').addEventListener('change', function() {
       localStorage.setItem('costpilot_preferred_provider', this.value);
       showSuccess();
     });
