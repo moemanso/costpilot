@@ -15,13 +15,18 @@
       --text: #c9d1d9;
       --text-secondary: #8b949e;
       --accent: #58a6ff;
+      --accent-glow: rgba(88, 166, 255, 0.3);
       --success: #3fb950;
+      --success-glow: rgba(63, 185, 80, 0.3);
       --warning: #d29922;
       --danger: #f85149;
       --sidebar-width: 280px;
       --transition-fast: 0.15s ease;
       --transition-normal: 0.25s ease;
       --transition-slow: 0.4s ease;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
     }
 
     /* Theme support */
@@ -32,6 +37,11 @@
       --border: #d0d7de;
       --text: #24292f;
       --text-secondary: #57606a;
+      --accent-glow: rgba(88, 166, 255, 0.2);
+      --success-glow: rgba(63, 185, 80, 0.2);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.1);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.2);
     }
     
     body {
@@ -79,7 +89,7 @@
       color: var(--text-secondary);
       width: 28px;
       height: 28px;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -92,6 +102,8 @@
       background: var(--accent);
       color: white;
       border-color: var(--accent);
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px var(--accent-glow);
     }
 
     .sidebar.collapsed .sidebar-toggle {
@@ -107,6 +119,10 @@
       align-items: center;
       gap: 0.5rem;
       transition: margin var(--transition-normal);
+      background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .sidebar.collapsed .logo {
@@ -114,7 +130,12 @@
       margin-bottom: 1rem;
     }
     
-    .logo span { color: var(--accent); }
+    .logo span { 
+      background: linear-gradient(135deg, var(--accent) 0%, #79b8ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
     .nav-links {
       display: flex;
@@ -149,14 +170,16 @@
     
     .stat-card {
       background: var(--bg-tertiary);
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 1rem;
       transition: all var(--transition-fast);
+      border: 1px solid transparent;
     }
 
     .stat-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--accent);
     }
     
     .stat-label {
@@ -197,10 +220,15 @@
       accent-color: var(--accent);
       cursor: pointer;
       transition: all var(--transition-fast);
+      height: 6px;
     }
 
     .budget-slider:hover {
       accent-color: var(--success);
+    }
+
+    .budget-slider::-webkit-slider-thumb {
+      box-shadow: 0 2px 8px var(--accent-glow);
     }
     
     /* Main Chat Area */
@@ -216,6 +244,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: var(--bg-secondary);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
     
     .chat-messages {
@@ -225,28 +258,33 @@
       display: flex;
       flex-direction: column;
       gap: 1rem;
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(88, 166, 255, 0.03) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(63, 185, 80, 0.02) 0%, transparent 40%),
+        var(--bg);
     }
     
     .message {
       max-width: 70%;
       padding: 1rem 1.25rem;
-      border-radius: 12px;
+      border-radius: 16px;
       line-height: 1.5;
-      animation: messageIn 0.3s ease forwards;
+      animation: messageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(16px) scale(0.96);
     }
 
     @keyframes messageIn {
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
       }
     }
     
     .message.user {
       align-self: flex-end;
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--accent) 0%, #79b8ff 100%);
+      box-shadow: 0 2px 8px var(--accent-glow);
     }
     
     .message.assistant {
@@ -274,16 +312,24 @@
       display: inline-block;
       background: var(--bg-tertiary);
       padding: 0.15rem 0.5rem;
-      border-radius: 4px;
+      border-radius: 6px;
       font-size: 0.7rem;
       margin-left: 0.5rem;
+      transition: all var(--transition-fast);
+      border: 1px solid transparent;
     }
 
     .cost-badge:hover {
-      transform: scale(1.1);
+      transform: scale(1.1) translateY(-1px);
+      border-color: var(--success);
+      box-shadow: 0 2px 8px var(--success-glow);
     }
     
-    .cost-badge.savings { color: var(--success); }
+    .cost-badge.savings { 
+      color: var(--success);
+      background: rgba(63, 185, 80, 0.15);
+      border-color: rgba(63, 185, 80, 0.3);
+    }
     
     /* Input Area */
     .input-area {
@@ -291,6 +337,7 @@
       border-top: 1px solid var(--border);
       background: var(--bg-secondary);
       transition: background var(--transition-normal);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
     }
     
     .api-key-prompt {
@@ -353,20 +400,20 @@
     }
     
     .input-row button {
-      background: var(--accent);
-      color: white;
+      background: linear-gradient(135deg, var(--accent) 0%, #79b8ff 100%);
+      color: #0d1117;
       border: none;
       padding: 0 2rem;
-      border-radius: 8px;
+      border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
       transition: all var(--transition-fast);
+      box-shadow: 0 2px 8px var(--accent-glow);
     }
     
     .input-row button:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--accent-glow);
     }
     
     .input-row button:active {
@@ -393,7 +440,7 @@
       background: var(--accent);
       border-radius: 50%;
       animation: typing 1.4s infinite ease-in-out;
-      box-shadow: 0 0 8px var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
     }
 
     .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
@@ -403,10 +450,12 @@
       0%, 60%, 100% { 
         transform: translateY(0); 
         opacity: 0.5;
+        box-shadow: 0 0 4px var(--accent-glow);
       }
       30% { 
-        transform: translateY(-8px); 
+        transform: translateY(-10px); 
         opacity: 1;
+        box-shadow: 0 0 16px var(--accent-glow);
       }
     }
 
@@ -436,12 +485,13 @@
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.85);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
       animation: fadeInOverlay 0.25s ease;
+      backdrop-filter: blur(4px);
     }
 
     @keyframes fadeInOverlay {
@@ -462,17 +512,18 @@
     .modal {
       background: var(--bg-secondary);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 16px;
       padding: 2rem;
       max-width: 500px;
       width: 90%;
-      animation: modalSlideIn 0.3s ease;
+      animation: modalSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--shadow-lg);
     }
 
     @keyframes modalSlideIn {
       from { 
         opacity: 0; 
-        transform: scale(0.95) translateY(-20px); 
+        transform: scale(0.95) translateY(-24px); 
       }
       to { 
         opacity: 1; 
@@ -532,53 +583,50 @@
     }
     
     .demo-badge {
-      background: var(--success);
-      color: var(--bg);
+      background: linear-gradient(135deg, var(--success) 0%, #7ee787 100%);
+      color: #0d1117;
       padding: 0.25rem 0.75rem;
-      border-radius: 4px;
+      border-radius: 6px;
       font-size: 0.75rem;
-      font-weight: 600;
+      font-weight: 700;
       animation: pulse 2s infinite;
+      box-shadow: 0 2px 8px var(--success-glow);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.4); }
-      50% { box-shadow: 0 0 0 6px rgba(63, 185, 80, 0); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.5); }
+      50% { box-shadow: 0 0 0 8px rgba(63, 185, 80, 0); }
     }
     
     .demo-btn {
       width: 100%;
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.75rem;
-      border-radius: 6px;
+      background: linear-gradient(135deg, rgba(63, 185, 80, 0.15) 0%, rgba(63, 185, 80, 0.05) 100%);
+      border: 1px solid var(--success);
+      color: var(--success);
+      padding: 0.875rem;
+      border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
       transition: all var(--transition-fast);
     }
     
     .demo-btn:hover {
-      border-color: var(--success);
-      color: var(--success);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(63, 185, 80, 0.2);
+      background: linear-gradient(135deg, var(--success) 0%, #7ee787 100%);
+      color: #0d1117;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--success-glow);
     }
 
     /* Header buttons */
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
     .header-actions button,
     .header-actions a {
       background: var(--bg-tertiary);
       border: 1px solid var(--border);
       color: var(--text);
       padding: 0.5rem 1rem;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       text-decoration: none;
       font-size: 0.875rem;
@@ -589,7 +637,8 @@
     .header-actions a:hover {
       border-color: var(--accent);
       color: var(--accent);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--accent-glow);
     }
 
     .theme-toggle {
@@ -742,12 +791,36 @@
   <!-- API Key Modal -->
   <div class="modal-overlay" id="apiModal">
     <div class="modal">
-      <h2>🔑 Connect Your OpenAI Key</h2>
-      <p>Paste your OpenAI API key to start chatting. Your key stays in your browser - we never store it.</p>
-      <input type="password" id="apiKeyInput" placeholder="sk-..." />
-      <button onclick="saveApiKey()">Start Chatting</button>
-      <button onclick="startDemo()" class="demo-btn" style="margin-top: 0.75rem; background: var(--bg-tertiary); border: 1px solid var(--success); color: var(--success);">🚀 Try Demo Mode</button>
-      <p class="help-text">Get your key from <a href="https://platform.openai.com/api-keys" target="_blank" style="color: var(--accent);">platform.openai.com</a></p>
+      <h2>🔑 Connect Your AI Providers</h2>
+      <p>Add API keys for one or more providers. Your keys stay in your browser - we never store them.</p>
+      
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label style="font-size: 0.875rem; color: var(--text-secondary);">OpenAI API Key</label>
+        <input type="password" id="apiKeyInputOpenAI" placeholder="sk-..." />
+        <p class="hint" style="font-size: 0.7rem;">GPT-4o, GPT-4, GPT-3.5</p>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label style="font-size: 0.875rem; color: var(--text-secondary);">Anthropic API Key</label>
+        <input type="password" id="apiKeyInputAnthropic" placeholder="sk-ant-..." />
+        <p class="hint" style="font-size: 0.7rem;">Claude 3.5, Claude 3</p>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label style="font-size: 0.875rem; color: var(--text-secondary);">Google Gemini API Key</label>
+        <input type="password" id="apiKeyInputGemini" placeholder="AIza..." />
+        <p class="hint" style="font-size: 0.7rem;">Gemini 1.5 Pro</p>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label style="font-size: 0.875rem; color: var(--text-secondary);">OpenRouter API Key</label>
+        <input type="password" id="apiKeyInputOpenRouter" placeholder="sk-or-..." />
+        <p class="hint" style="font-size: 0.7rem;">200+ models at wholesale prices</p>
+      </div>
+      
+      <button onclick="saveApiKeys()" class="btn btn-primary" style="width: 100%;">Start Chatting</button>
+      <button onclick="startDemo()" class="demo-btn" style="margin-top: 0.75rem;">🚀 Try Demo Mode</button>
+      <p class="help-text">Get your keys from the provider websites</p>
     </div>
   </div>
 
@@ -812,10 +885,6 @@
     </div>
     
     <div class="input-area">
-      <div class="api-key-prompt" id="apiKeyPrompt">
-        <label>OpenAI API Key</label>
-        <input type="password" id="chatApiKey" placeholder="sk-..." />
-      </div>
       <div class="input-row">
         <input type="text" id="messageInput" placeholder="Ask me anything... (Ctrl+Enter to send)" onkeydown="handleKeyPress(event)" />
         <button onclick="sendMessage()" id="sendBtn">Send</button>
@@ -827,11 +896,18 @@
   </div>
 
   <script>
-    let apiKey = localStorage.getItem('costpilot_apikey') || '';
+    let apiKeys = {
+      openai: localStorage.getItem('costpilot_apikey_openai') || '',
+      anthropic: localStorage.getItem('costpilot_apikey_anthropic') || '',
+      gemini: localStorage.getItem('costpilot_apikey_gemini') || '',
+      openrouter: localStorage.getItem('costpilot_apikey_openrouter') || ''
+    };
     let budget = parseInt(localStorage.getItem('costpilot_budget')) || 100;
     let isDemoMode = localStorage.getItem('costpilot_demo') === 'true';
     let sidebarCollapsed = localStorage.getItem('costpilot_sidebar_collapsed') === 'true';
     let isDarkTheme = localStorage.getItem('costpilot_theme') !== 'light';
+    let autoSelect = localStorage.getItem('costpilot_auto_select') !== 'false';
+    let preferredProvider = localStorage.getItem('costpilot_preferred_provider') || 'auto';
     
     // Apply saved theme
     if (!isDarkTheme) {
@@ -860,8 +936,9 @@
       localStorage.setItem('costpilot_sidebar_collapsed', sidebarCollapsed);
     }
     
-    // Show modal if no API key and not in demo mode
-    if (!apiKey && !isDemoMode) {
+    // Show modal if no API keys and not in demo mode
+    const hasAnyKey = Object.values(apiKeys).some(key => key !== '');
+    if (!hasAnyKey && !isDemoMode) {
       document.getElementById('apiModal').classList.remove('hidden');
       document.getElementById('apiKeyPrompt').classList.add('hidden');
     } else if (isDemoMode) {
@@ -871,7 +948,6 @@
     } else {
       document.getElementById('apiModal').classList.add('hidden');
       document.getElementById('apiKeyPrompt').classList.add('hidden');
-      document.getElementById('chatApiKey').value = apiKey;
     }
     
     document.getElementById('budgetSlider').value = budget;
@@ -894,16 +970,52 @@
     function saveApiKey() {
       const input = document.getElementById('apiKeyInput');
       if (input.value.trim().startsWith('sk-')) {
-        apiKey = input.value.trim();
-        localStorage.setItem('costpilot_apikey', apiKey);
+        apiKeys.openai = input.value.trim();
+        localStorage.setItem('costpilot_apikey_openai', apiKeys.openai);
         localStorage.setItem('costpilot_demo', 'false');
         isDemoMode = false;
         document.getElementById('apiModal').classList.add('hidden');
-        document.getElementById('chatApiKey').value = apiKey;
         document.getElementById('demoBadge').classList.add('hidden');
       } else {
         alert('Please enter a valid OpenAI API key (starts with sk-)');
       }
+    }
+    
+    function saveApiKeys() {
+      const openaiKey = document.getElementById('apiKeyInputOpenAI').value.trim();
+      const anthropicKey = document.getElementById('apiKeyInputAnthropic').value.trim();
+      const geminiKey = document.getElementById('apiKeyInputGemini').value.trim();
+      const openrouterKey = document.getElementById('apiKeyInputOpenRouter').value.trim();
+      
+      // Save keys if provided
+      if (openaiKey && openaiKey.startsWith('sk-')) {
+        apiKeys.openai = openaiKey;
+        localStorage.setItem('costpilot_apikey_openai', openaiKey);
+      }
+      if (anthropicKey && anthropicKey.startsWith('sk-ant-')) {
+        apiKeys.anthropic = anthropicKey;
+        localStorage.setItem('costpilot_apikey_anthropic', anthropicKey);
+      }
+      if (geminiKey && geminiKey.startsWith('AIza')) {
+        apiKeys.gemini = geminiKey;
+        localStorage.setItem('costpilot_apikey_gemini', geminiKey);
+      }
+      if (openrouterKey && openrouterKey.startsWith('sk-or-')) {
+        apiKeys.openrouter = openrouterKey;
+        localStorage.setItem('costpilot_apikey_openrouter', openrouterKey);
+      }
+      
+      // Check if at least one valid key was provided
+      const hasAnyKey = Object.values(apiKeys).some(key => key !== '');
+      if (!hasAnyKey && !openaiKey && !anthropicKey && !geminiKey && !openrouterKey) {
+        alert('Please enter at least one valid API key');
+        return;
+      }
+      
+      localStorage.setItem('costpilot_demo', 'false');
+      isDemoMode = false;
+      document.getElementById('apiModal').classList.add('hidden');
+      document.getElementById('demoBadge').classList.add('hidden');
     }
     
     function updateBudget(value) {
@@ -923,10 +1035,12 @@
     async function sendMessage() {
       const input = document.getElementById('messageInput');
       const message = input.value.trim();
-      const chatApiKey = document.getElementById('chatApiKey').value || apiKey;
       
       if (!message) return;
-      if (!chatApiKey && !isDemoMode) {
+      
+      // Check if we have any API keys
+      const hasAnyKey = Object.values(apiKeys).some(key => key !== '');
+      if (!hasAnyKey && !isDemoMode) {
         showApiModal();
         return;
       }
@@ -950,8 +1064,10 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             message, 
-            apiKey: isDemoMode ? undefined : chatApiKey,
-            budget: budget
+            apiKeys: isDemoMode ? undefined : apiKeys,
+            budget: budget,
+            autoSelect: autoSelect,
+            preferredProvider: preferredProvider
           })
         });
         
@@ -964,7 +1080,8 @@
           const errorMessage = handleApiError(data.error, data.errorType);
           addMessage(errorMessage, 'assistant');
         } else {
-          addMessage(data.response, 'assistant', data.cost, data.saved, data.model);
+          // Display response with provider info and savings
+          addMessage(data.response, 'assistant', data.cost, data.saved, data.model, data.provider, data.comparison);
           updateStats(data.totalSpent, data.totalSaved);
           
           // Show demo badge if response indicates demo mode
@@ -991,9 +1108,9 @@
     // Handle API errors with better messages
     function handleApiError(error, errorType) {
       const messages = {
-        invalid_api_key: '🔑 Invalid API Key. Please check your OpenAI API key in settings.',
+        invalid_api_key: '🔑 Invalid API Key. Please check your API keys in settings.',
         rate_limit: '⏳ Rate limit exceeded. Please wait a moment before sending another message.',
-        quota_exceeded: '💳 API quota exceeded. Please check your OpenAI account billing.',
+        quota_exceeded: '💳 API quota exceeded. Please check your account billing.',
         budget_exceeded: '💰 Budget exceeded! Your monthly spending limit has been reached.',
         network_error: '🌐 Network error. Please check your internet connection.'
       };
@@ -1018,14 +1135,34 @@
       }
     }
     
-    function addMessage(text, role, cost, saved, model) {
+    function addMessage(text, role, cost, saved, model, provider, comparison) {
       const container = document.getElementById('chatMessages');
       const div = document.createElement('div');
       div.className = 'message ' + role;
       
       let meta = '';
       if (role === 'assistant' && cost !== undefined) {
-        meta = `<div class="meta">Cost: $${cost.toFixed(4)}${saved ? ` <span class="cost-badge savings">Saved $${saved.toFixed(4)}</span>` : ''} • Model: ${model}</div>`;
+        // Build provider badge
+        const providerBadges = {
+          openai: '🤖 OpenAI',
+          anthropic: '🧠 Anthropic',
+          gemini: '🔷 Google',
+          openrouter: '🌐 OpenRouter'
+        };
+        const providerLabel = providerBadges[provider] || provider || '🤖 AI';
+        
+        // Show savings comparison
+        let savingsHtml = '';
+        if (saved > 0) {
+          savingsHtml = `<span class="cost-badge savings">💰 Saved $${saved.toFixed(4)}</span>`;
+        }
+        
+        meta = `<div class="meta">${providerLabel} ${model ? `• ${model}` : ''} • $${cost.toFixed(4)}${savingsHtml}</div>`;
+        
+        // Add comparison info if available
+        if (comparison) {
+          meta += `<div class="meta" style="color: var(--success); margin-top: 0.25rem;">✓ Used ${provider} - saved $${saved.toFixed(4)} vs ${comparison}</div>`;
+        }
       } else if (role === 'assistant') {
         meta = `<div class="meta">Model: ${model || 'gpt-4o-mini'}</div>`;
       }
