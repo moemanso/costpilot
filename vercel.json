@@ -1,19 +1,15 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/public/landing.html" },
-    { "source": "/chat", "destination": "/public/index.html" },
-    { "source": "/dashboard", "destination": "/public/dashboard.html" },
-    { "source": "/settings", "destination": "/public/settings.html" },
-    { "source": "/api/(.*)", "destination": "/api/$1" }
-  ],
-  "headers": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
-      ]
+      "src": "public/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
     }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/public/$1" }
   ]
 }
