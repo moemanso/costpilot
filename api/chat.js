@@ -194,26 +194,80 @@ module.exports = async function handler(req, res) {
     
     // Determine complexity and select model
     const complexity = analyzeComplexity(message);
-    const selectedModel = selectModel(complexity);
-    const expensiveModel = { model: 'gpt-4-turbo' };
+    
+    // Detect which provider to use based on API key
+    let provider = 'openai';
+    let model = 'gpt-4o-mini';
+    
+    if (activeApiKey.startsWith('sk-or-')) {
+      provider = 'openrouter';
+      model = 'openai/gpt-4o-mini'; // OpenRouter model ID
+    } else if (activeApiKey.startsWith('sk-ant-')) {
+      provider = 'anthropic';
+      model = 'claude-3-haiku-20240307';
+    } else if (activeApiKey.startsWith('AIza')) {
+      provider = 'google';
+      model = 'gemini-1.5-pro';
+    } else {
+      // Default to OpenAI
+      provider = 'openai';
+      model = 'gpt-4o-mini';
+    }
+    
+    const selectedModel = { provider, model };
+    const expensiveModel = { model: provider === 'anthropic' ? 'claude-3-opus-20240229' : 'gpt-4-turbo' };
     const selectedPricing = getModelPricing(selectedModel.model);
     const expensivePricing = getModelPricing(expensiveModel.model);
     
     // Add user message to history
     session.messages.push({ role: 'user', content: message });
     
-    // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
+    // Call the appropriate API based on provider
+    let apiUrl, apiHeaders, apiBody;
+    
+    if (provider === 'openrouter') {
+      apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+      apiHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${activeApiKey}`,
+        'HTTP-Referer': 'https://costpilot-nine.vercel.app',
+        'X-Title': 'CostPilot'
+      };
+      apiBody = {
+        model: 'openai/gpt-4o-mini',
+        messages: session.messages.slice(-10),
+        max_tokens: complexity === 'simple' ? 50 : complexity === 'medium' ? 500 : 2000
+      };
+    } else if (provider === 'anthropic') {
+      apiUrl = 'https://api.anthropic.com/v1/messages';
+      apiHeaders = {
+        'Content-Type': 'application/json',
+        'x-api-key': activeApiKey,
+        'anthropic-version': '2023-06-01'
+      };
+      apiBody = {
+        model: 'claude-3-haiku-20240307',
+        max_tokens: complexity === 'simple' ? 50 : complexity === 'medium' ? 500 : 2000,
+        messages: session.messages.slice(-10).map(m => ({ role: m.role === 'assistant' ? 'assistant' : m.role, content: m.content }))
+      };
+    } else {
+      // OpenAI
+      apiUrl = 'https://api.openai.com/v1/chat/completions';
+      apiHeaders = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${activeApiKey}`
-      },
-      body: JSON.stringify({
-        model: selectedModel.model,
-        messages: session.messages.slice(-10), // Keep last 10 messages for context
+      };
+      apiBody = {
+        model: 'gpt-4o-mini',
+        messages: session.messages.slice(-10),
         max_tokens: complexity === 'simple' ? 50 : complexity === 'medium' ? 500 : 2000
-      })
+      };
+    }
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: apiHeaders,
+      body: JSON.stringify(apiBody)
     });
     
     if (!response.ok) {
