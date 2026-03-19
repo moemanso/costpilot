@@ -263,22 +263,22 @@ module.exports = async function handler(req, res) {
     // Determine complexity and select model
     const complexity = analyzeComplexity(message);
     
-    // If preferredProvider is specified, override automatic detection
-    if (preferredProvider && preferredProvider !== 'auto') {
-      console.log('[DEBUG] Using preferred provider:', preferredProvider);
-      provider = preferredProvider;
+    // If selectedProvider is specified, override automatic detection
+    if (selectedProvider && selectedProvider !== 'auto') {
+      console.log('[DEBUG] Using preferred provider:', selectedProvider);
+      provider = selectedProvider;
       // Set the appropriate key and model based on preference
-      if (preferredProvider === 'openrouter' && apiKeys.openrouter) {
+      if (selectedProvider === 'openrouter' && apiKeys.openrouter) {
         activeApiKey = apiKeys.openrouter;
         model = 'openai/gpt-4o-mini';
-      } else if (preferredProvider === 'anthropic' && apiKeys.anthropic) {
+      } else if (selectedProvider === 'anthropic' && apiKeys.anthropic) {
         activeApiKey = apiKeys.anthropic;
         model = 'claude-3-haiku-20240307';
-      } else if ((preferredProvider === 'google' || preferredProvider === 'gemini') && (apiKeys.gemini || apiKeys.google)) {
+      } else if ((selectedProvider === 'google' || selectedProvider === 'gemini') && (apiKeys.gemini || apiKeys.google)) {
         provider = 'google';
         activeApiKey = apiKeys.gemini || apiKeys.google;
         model = 'gemini-1.5-pro';
-      } else if (preferredProvider === 'openai' && apiKeys.openai) {
+      } else if (selectedProvider === 'openai' && apiKeys.openai) {
         activeApiKey = apiKeys.openai;
         model = 'gpt-4o-mini';
       }
