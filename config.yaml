@@ -38,6 +38,10 @@ routing:
           model: "claude-3-haiku-20240307"
           costPer1kInput: 0.00025
           costPer1kOutput: 0.00125
+        - provider: "vercel"
+          model: "gpt-4o-mini"
+          costPer1kInput: 0.00015
+          costPer1kOutput: 0.0006
 
     - name: "medium"
       maxTokens: 500
@@ -50,6 +54,10 @@ routing:
           model: "claude-3-sonnet-20240229"
           costPer1kInput: 0.003
           costPer1kOutput: 0.015
+        - provider: "vercel"
+          model: "gpt-4o"
+          costPer1kInput: 0.0025
+          costPer1kOutput: 0.01
 
     - name: "complex"
       maxTokens: 999999
@@ -62,6 +70,10 @@ routing:
           model: "claude-3-opus-20240229"
           costPer1kInput: 0.015
           costPer1kOutput: 0.075
+        - provider: "vercel"
+          model: "gpt-4-turbo"
+          costPer1kInput: 0.01
+          costPer1kOutput: 0.03
 
   # Provider endpoints
   providers:
@@ -74,6 +86,10 @@ routing:
       defaultHeaders:
         "Content-Type": "application/json"
         "anthropic-version": "2023-06-01"
+    vercel:
+      baseUrl: "https://gateway.ai.vercel.com/ai/gateway"
+      defaultHeaders:
+        "Content-Type": "application/json"
 
 # Cache settings
 cache:
