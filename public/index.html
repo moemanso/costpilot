@@ -666,6 +666,90 @@
 
     .hidden { display: none !important; }
 
+    /* Trial Banner */
+    .trial-banner {
+      background: linear-gradient(135deg, rgba(63, 185, 80, 0.15) 0%, rgba(63, 185, 80, 0.05) 100%);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+      color: var(--success);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      animation: trialPulse 2s infinite;
+    }
+
+    .trial-banner.expired {
+      background: linear-gradient(135deg, rgba(248, 81, 73, 0.15) 0%, rgba(248, 81, 73, 0.05) 100%);
+      border-color: rgba(248, 81, 73, 0.3);
+      color: var(--danger);
+      animation: none;
+    }
+
+    @keyframes trialPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(63, 185, 80, 0); }
+    }
+
+    /* Paywall Modal */
+    .paywall-modal .modal {
+      text-align: center;
+      border: 1px solid var(--danger);
+      box-shadow: 0 0 40px rgba(248, 81, 73, 0.2);
+    }
+
+    .paywall-modal .modal h2 {
+      color: var(--danger);
+    }
+
+    .paywall-price {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--text);
+      margin: 1.5rem 0;
+    }
+
+    .paywall-price span {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .paywall-savings {
+      background: rgba(63, 185, 80, 0.15);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1.5rem 0;
+      color: var(--success);
+    }
+
+    .paywall-savings strong {
+      display: block;
+      font-size: 1.25rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .paywall-btn {
+      background: linear-gradient(135deg, var(--danger) 0%, #ff6b61 100%);
+      color: white !important;
+      border: none;
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+    }
+
+    .paywall-btn:hover {
+      box-shadow: 0 6px 20px rgba(248, 81, 73, 0.4);
+    }
+
+    .paywall-note {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 1rem;
+    }
+
     /* Mobile Responsiveness */
     @media (max-width: 768px) {
       body {
@@ -824,6 +908,27 @@
     </div>
   </div>
 
+  <!-- Paywall Modal -->
+  <div class="modal-overlay paywall-modal hidden" id="paywallModal">
+    <div class="modal">
+      <h2>⏰ Trial Expired</h2>
+      <p>Your free 5-day trial has ended. Subscribe to continue using CostPilot and keep saving on AI costs.</p>
+      
+      <div class="paywall-price">
+        $9<span>/month</span>
+      </div>
+      
+      <div class="paywall-savings" id="paywallSavings">
+        <strong>You've saved $0.00 so far!</strong>
+        Keep the savings coming with Pro
+      </div>
+      
+      <button onclick="subscribeNow()" class="btn paywall-btn">Subscribe Now →</button>
+      <button onclick="extendDemo()" class="demo-btn" style="margin-top: 0.75rem;">Continue in Demo Mode</button>
+      <p class="paywall-note">Cancel anytime. Secure payment via Stripe.</p>
+    </div>
+  </div>
+
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
@@ -878,6 +983,9 @@
         </select>
       </div>
       <div class="header-actions">
+        <span id="trialBanner" class="trial-banner hidden">
+          <span id="trialText">🎉</span> <span id="trialCountdown">5 days left</span>
+        </span>
         <span id="demoBadge" class="demo-badge hidden">🔶 DEMO MODE</span>
         <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle" title="Toggle Theme">🌙</button>
         <button onclick="showApiModal()">🔑 Change Key</button>
@@ -915,6 +1023,88 @@
     let isDarkTheme = localStorage.getItem('costpilot_theme') !== 'light';
     let autoSelect = localStorage.getItem('costpilot_auto_select') !== 'false';
     let selectedProvider = localStorage.getItem('costpilot_selected_provider') || ''; // 'openai', 'anthropic', 'google', 'openrouter'
+    
+    // Trial management
+    let trialStartDate = localStorage.getItem('costpilot_trial_start');
+    let isPaid = localStorage.getItem('costpilot_paid') === 'true';
+    const TRIAL_DAYS = 5;
+    
+    // Initialize trial on first use
+    if (!trialStartDate) {
+      trialStartDate = new Date().toISOString();
+      localStorage.setItem('costpilot_trial_start', trialStartDate);
+    }
+    
+    // Check trial status
+    function getTrialDaysRemaining() {
+      if (!trialStartDate) return 0;
+      const start = new Date(trialStartDate);
+      const now = new Date();
+      const diffTime = now - start;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      return Math.max(0, TRIAL_DAYS - diffDays);
+    }
+    
+    function isTrialExpired() {
+      return getTrialDaysRemaining() <= 0 && !isPaid;
+    }
+    
+    // Update trial banner
+    function updateTrialBanner() {
+      const banner = document.getElementById('trialBanner');
+      const countdown = document.getElementById('trialCountdown');
+      const trialText = document.getElementById('trialText');
+      const daysRemaining = getTrialDaysRemaining();
+      
+      if (isPaid) {
+        banner.classList.add('hidden');
+        return;
+      }
+      
+      banner.classList.remove('hidden');
+      
+      if (daysRemaining <= 0) {
+        banner.classList.add('expired');
+        trialText.textContent = '⚠️';
+        countdown.textContent = 'Trial expired';
+        showPaywall();
+      } else if (daysRemaining === 1) {
+        trialText.textContent = '⏰';
+        countdown.textContent = '1 day left!';
+      } else {
+        trialText.textContent = '🎉';
+        countdown.textContent = `${daysRemaining} days left`;
+      }
+    }
+    
+    // Show paywall modal
+    function showPaywall() {
+      const totalSaved = parseFloat(localStorage.getItem('costpilot_total_saved')) || 0;
+      document.getElementById('paywallSavings').innerHTML = `<strong>You've saved $${totalSaved.toFixed(2)} so far!</strong>Keep the savings coming with Pro`;
+      document.getElementById('paywallModal').classList.remove('hidden');
+    }
+    
+    // Subscribe handler (Stripe placeholder)
+    function subscribeNow() {
+      alert('Stripe integration coming soon! For now, use Demo Mode to continue.');
+      // In production: window.location.href = 'https://checkout.stripe.com/...';
+    }
+    
+    // Extend demo (allow trial users to continue in demo)
+    function extendDemo() {
+      document.getElementById('paywallModal').classList.add('hidden');
+      isDemoMode = true;
+      localStorage.setItem('costpilot_demo', 'true');
+      document.getElementById('demoBadge').classList.remove('hidden');
+      addMessage("Welcome to Demo Mode! 🚀\n\nYou can continue trying CostPilot without an API key. I'll show you how the smart routing works with realistic responses, costs, and savings.", 'assistant');
+    }
+    
+    // Mark as paid (for Stripe webhook in production)
+    function markAsPaid() {
+      isPaid = true;
+      localStorage.setItem('costpilot_paid', 'true');
+      updateTrialBanner();
+    }
     
     // Apply saved theme
     if (!isDarkTheme) {
@@ -956,6 +1146,9 @@
       document.getElementById('apiModal').classList.add('hidden');
       document.getElementById('apiKeyPrompt').classList.add('hidden');
     }
+    
+    // Update trial banner on load
+    updateTrialBanner();
     
     document.getElementById('budgetSlider').value = budget;
     document.getElementById('budgetValue').textContent = '$' + budget;
@@ -1117,10 +1310,19 @@
         if (data.error) {
           const errorMessage = handleApiError(data.error, data.errorType);
           addMessage(errorMessage, 'assistant');
+        } else if (data.trialExpired) {
+          // Show paywall when trial expires
+          showPaywall();
+          addMessage(data.response, 'assistant');
         } else {
           // Display response with provider info and savings
           addMessage(data.response, 'assistant', data.cost, data.saved, data.model, data.provider, data.comparison);
           updateStats(data.totalSpent, data.totalSaved);
+          
+          // Update trial banner
+          if (data.trialDaysRemaining !== undefined) {
+            updateTrialBanner();
+          }
           
           // Show demo badge if response indicates demo mode
           if (data.isDemo && !isDemoMode) {
@@ -1213,6 +1415,7 @@
     function updateStats(spent, saved) {
       document.getElementById('totalSpent').textContent = '$' + (spent || 0).toFixed(2);
       document.getElementById('totalSaved').textContent = '$' + (saved || 0).toFixed(2);
+      localStorage.setItem('costpilot_total_saved', saved || 0);
       
       const rate = spent + saved > 0 ? ((saved / (spent + saved)) * 100).toFixed(0) : 0;
       document.getElementById('savingsRate').textContent = rate + '%';

@@ -544,6 +544,114 @@
       .mockup-content { grid-template-columns: 1fr; }
       .mockup-sidebar { display: none; }
     }
+
+    /* Pricing Section */
+    .pricing-section {
+      padding: 5rem 0;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .pricing-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--accent);
+      box-shadow: 0 0 30px rgba(88, 166, 255, 0.2);
+      transform: scale(1.05);
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .pricing-card.featured:hover {
+      transform: scale(1.05) translateY(-8px);
+    }
+
+    .pricing-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .pricing-price {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .pricing-price span {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .pricing-card.free .pricing-price {
+      color: var(--success);
+    }
+
+    .pricing-card.pro .pricing-price {
+      color: var(--accent);
+    }
+
+    .pricing-period {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    .pricing-features {
+      list-style: none;
+      text-align: left;
+      margin-bottom: 2rem;
+    }
+
+    .pricing-features li {
+      padding: 0.5rem 0;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .pricing-features li::before {
+      content: '✓';
+      color: var(--success);
+      font-weight: bold;
+    }
+
+    .pricing-badge {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--success) 100%);
+      color: #0d1117;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .pricing-card {
+      position: relative;
+    }
   </style>
 </head>
 <body>
@@ -559,6 +667,7 @@
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#how-it-works">How It Works</a>
+        <a href="#pricing">Pricing</a>
         <a href="/chat" class="btn btn-secondary">Open App</a>
         <a href="/chat" class="btn btn-primary">Try Now →</a>
       </div>
@@ -697,6 +806,45 @@
           <div class="step-number">3</div>
           <h3>Save Automatically</h3>
           <p>We route each query to the cheapest capable model. Watch your savings add up in real-time.</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Pricing -->
+    <section class="pricing-section" id="pricing">
+      <div class="section-header">
+        <h2>Simple Pricing</h2>
+        <p>Start free, upgrade when you're ready</p>
+      </div>
+      
+      <div class="pricing-grid">
+        <div class="pricing-card free">
+          <div class="pricing-title">Free Trial</div>
+          <div class="pricing-price">$0</div>
+          <div class="pricing-period">5 days • then Demo Mode</div>
+          <ul class="pricing-features">
+            <li>Full access to all features</li>
+            <li>Smart model routing</li>
+            <li>Real-time savings tracking</li>
+            <li>Budget controls</li>
+            <li>Demo mode after trial</li>
+          </ul>
+          <a href="/chat" class="btn btn-secondary" style="width: 100%;">Start Free Trial →</a>
+        </div>
+        
+        <div class="pricing-card pro featured">
+          <span class="pricing-badge">Most Popular</span>
+          <div class="pricing-title">Pro</div>
+          <div class="pricing-price">$9<span>/month</span></div>
+          <div class="pricing-period">Unlimited access</div>
+          <ul class="pricing-features">
+            <li>Everything in Free</li>
+            <li>Unlimited conversations</li>
+            <li>Priority support</li>
+            <li>Advanced analytics</li>
+            <li>Custom integrations</li>
+          </ul>
+          <a href="/chat" class="btn btn-primary" style="width: 100%;">Start Free Trial →</a>
         </div>
       </div>
     </section>

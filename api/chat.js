@@ -1,3 +1,27 @@
+// Trial configuration
+const TRIAL_DAYS = 5;
+const TRIAL_PRICE = 9; // $9/month after trial
+
+// Check if trial has expired
+function isTrialExpired(trialStartDate) {
+  if (!trialStartDate) return true; // No trial = expired
+  const start = new Date(trialStartDate);
+  const now = new Date();
+  const diffTime = now - start;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays >= TRIAL_DAYS;
+}
+
+// Get days remaining in trial
+function getTrialDaysRemaining(trialStartDate) {
+  if (!trialStartDate) return 0;
+  const start = new Date(trialStartDate);
+  const now = new Date();
+  const diffTime = now - start;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(0, TRIAL_DAYS - diffDays);
+}
+
 // Main chat endpoint for Vercel Serverless
 const DEFAULT_BUDGET = 100;
 
@@ -128,7 +152,8 @@ module.exports = async function handler(req, res) {
           totalSpent: 0,
           totalSaved: 0,
           budget: budget || DEFAULT_BUDGET,
-          isDemo: true
+          isDemo: true,
+          trialStartDate: new Date().toISOString()
         };
       }
       
@@ -165,7 +190,10 @@ module.exports = async function handler(req, res) {
         expensivePrice: 0.03,
         savings: Math.round((saved / expensiveCost) * 100),
         warning: false,
-        isDemo: true
+        isDemo: true,
+        trialDaysRemaining: trialDaysRemaining,
+        trialExpired: false,
+        isPaid: false
       });
     }
     
@@ -178,10 +206,34 @@ module.exports = async function handler(req, res) {
         totalSpent: 0,
         totalSaved: 0,
         budget: budget || DEFAULT_BUDGET,
-        apiKeys: apiKeys
+        apiKeys: apiKeys,
+        trialStartDate: new Date().toISOString()
       };
     }
     sessions.set(regularSessionId, session);
+    
+    // Check trial status
+    const isPaid = req.body.isPaid === true || localStorage.getItem('costpilot_paid') === 'true';
+    const trialExpired = !isPaid && isTrialExpired(session.trialStartDate);
+    const trialDaysRemaining = getTrialDaysRemaining(session.trialStartDate);
+    
+    // If trial expired and not paid, show paywall
+    if (trialExpired && !isPaid) {
+      return res.json({
+        response: "Your free trial has ended. To continue using CostPilot, please subscribe for $9/month.",
+        cost: 0,
+        saved: 0,
+        totalSpent: session.totalSpent,
+        totalSaved: session.totalSaved,
+        budget: session.budget,
+        model: 'trial_expired',
+        trialExpired: true,
+        trialDaysRemaining: 0,
+        isPaid: false,
+        savings: 0,
+        warning: false
+      });
+    }
     
     // Detect provider and get the appropriate API key based on key format
     let provider = 'openai';
@@ -425,7 +477,10 @@ module.exports = async function handler(req, res) {
       expensiveModel: expensiveModel.model,
       expensivePrice: expensivePricing.output,
       savings: expensiveCost > 0 ? Math.round((saved / expensiveCost) * 100) : 0,
-      warning: session.totalSpent >= session.budget * 0.75
+      warning: session.totalSpent >= session.budget * 0.75,
+      trialDaysRemaining: trialDaysRemaining,
+      trialExpired: false,
+      isPaid: isPaid
     });
     
   } catch (error) {
