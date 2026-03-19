@@ -92,14 +92,14 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { message, apiKey, sessionId, budget, preferredProvider } = req.body;
+    const { message, apiKey, sessionId, budget, selectedProvider } = req.body;
     
     // DEBUG: Log incoming API keys (masked for security)
     console.log('[DEBUG] Received request:', { 
       hasMessage: !!message, 
       hasApiKey: !!apiKey,
       hasApiKeys: !!req.body.apiKeys,
-      preferredProvider: preferredProvider,
+      selectedProvider: selectedProvider,
       apiKeysMasked: req.body.apiKeys ? {
         openai: req.body.apiKeys.openai ? 'sk-...' + req.body.apiKeys.openai.slice(-4) : '',
         anthropic: req.body.apiKeys.anthropic ? 'sk-ant-...' + req.body.apiKeys.anthropic.slice(-4) : '',
@@ -198,26 +198,35 @@ module.exports = async function handler(req, res) {
       const googleKey = apiKeys.gemini || apiKeys.google;
       const openaiKey = apiKeys.openai;
       
-      // Check each provider's key for its specific format
-      if (openrouterKey && (openrouterKey.startsWith('sk-or-') || openrouterKey.startsWith('sk-or-v1-'))) {
-        provider = 'openrouter';
-        activeApiKey = openrouterKey;
-      } else if (anthropicKey && anthropicKey.startsWith('sk-ant-')) {
-        provider = 'anthropic';
-        activeApiKey = anthropicKey;
-      } else if (googleKey && googleKey.startsWith('AIza')) {
-        provider = 'google';
-        activeApiKey = googleKey;
-      } else if (openaiKey && openaiKey.startsWith('sk-')) {
-        provider = 'openai';
-        activeApiKey = openaiKey;
+      // If user explicitly selected a provider, use that
+      if (selectedProvider && selectedProvider !== 'auto') {
+        provider = selectedProvider;
+        if (provider === 'openrouter') activeApiKey = openrouterKey;
+        else if (provider === 'anthropic') activeApiKey = anthropicKey;
+        else if (provider === 'google') activeApiKey = googleKey;
+        else activeApiKey = openaiKey;
       } else {
-        // Fallback: use first non-empty key
-        activeApiKey = openrouterKey || anthropicKey || googleKey || openaiKey || '';
-        if (activeApiKey.startsWith('sk-ant-')) provider = 'anthropic';
-        else if (activeApiKey.startsWith('sk-or-') || activeApiKey.startsWith('sk-or-v1-')) provider = 'openrouter';
-        else if (activeApiKey.startsWith('AIza')) provider = 'google';
-        else provider = 'openai';
+        // Auto-detect based on key format
+        if (openrouterKey && (openrouterKey.startsWith('sk-or-') || openrouterKey.startsWith('sk-or-v1-'))) {
+          provider = 'openrouter';
+          activeApiKey = openrouterKey;
+        } else if (anthropicKey && anthropicKey.startsWith('sk-ant-')) {
+          provider = 'anthropic';
+          activeApiKey = anthropicKey;
+        } else if (googleKey && googleKey.startsWith('AIza')) {
+          provider = 'google';
+          activeApiKey = googleKey;
+        } else if (openaiKey && openaiKey.startsWith('sk-')) {
+          provider = 'openai';
+          activeApiKey = openaiKey;
+        } else {
+          // Fallback: use first non-empty key
+          activeApiKey = openrouterKey || anthropicKey || googleKey || openaiKey || '';
+          if (activeApiKey.startsWith('sk-ant-')) provider = 'anthropic';
+          else if (activeApiKey.startsWith('sk-or-') || activeApiKey.startsWith('sk-or-v1-')) provider = 'openrouter';
+          else if (activeApiKey.startsWith('AIza')) provider = 'google';
+          else provider = 'openai';
+        }
       }
       // DEBUG: Log which provider was selected
       console.log('[DEBUG] Provider selected:', provider, 'activeApiKey prefix:', activeApiKey ? activeApiKey.substring(0, 10) : 'none');

@@ -869,6 +869,13 @@
           <a href="/dashboard" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; padding: 0.25rem 0.5rem; border-radius: 4px;">📊 Dashboard</a>
           <a href="/settings" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem; padding: 0.25rem 0.5rem; border-radius: 4px;">⚙️ Settings</a>
         </nav>
+        <select id="providerSelect" onchange="changeProvider(this.value)" style="background: var(--bg-tertiary); color: var(--text); border: 1px solid var(--border); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">
+          <option value="">🧠 Auto-detect</option>
+          <option value="openai">🤖 OpenAI</option>
+          <option value="anthropic">🧠 Anthropic</option>
+          <option value="google">🔷 Google</option>
+          <option value="openrouter">🌐 OpenRouter</option>
+        </select>
       </div>
       <div class="header-actions">
         <span id="demoBadge" class="demo-badge hidden">🔶 DEMO MODE</span>
@@ -907,7 +914,7 @@
     let sidebarCollapsed = localStorage.getItem('costpilot_sidebar_collapsed') === 'true';
     let isDarkTheme = localStorage.getItem('costpilot_theme') !== 'light';
     let autoSelect = localStorage.getItem('costpilot_auto_select') !== 'false';
-    let preferredProvider = localStorage.getItem('costpilot_preferred_provider') || 'auto';
+    let selectedProvider = localStorage.getItem('costpilot_selected_provider') || ''; // 'openai', 'anthropic', 'google', 'openrouter'
     
     // Apply saved theme
     if (!isDarkTheme) {
@@ -1030,6 +1037,14 @@
       document.getElementById('budgetValue').textContent = '$' + value;
     }
     
+    function changeProvider(provider) {
+      selectedProvider = provider;
+      localStorage.setItem('costpilot_selected_provider', provider);
+    }
+    
+    // Initialize provider select from localStorage
+    document.getElementById('providerSelect').value = selectedProvider;
+    
     function handleKeyPress(e) {
       // Enter to send (plain Enter or with Cmd/Ctrl for multiline)
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -1079,9 +1094,9 @@
           apiKeys: isDemoMode ? undefined : apiKeys,
           budget: budget,
           autoSelect: autoSelect,
-          preferredProvider: preferredProvider
+          selectedProvider: selectedProvider
         };
-        console.log('[DEBUG Frontend] Sending request to:', endpoint, 'keys:', requestBody.apiKeys ? {
+        console.log('[DEBUG Frontend] Sending request to:', endpoint, 'selectedProvider:', selectedProvider, 'keys:', requestBody.apiKeys ? {
           openai: requestBody.apiKeys.openai ? 'sk-...' + requestBody.apiKeys.openai.slice(-4) : '',
           anthropic: requestBody.apiKeys.anthropic ? 'sk-ant-...' + requestBody.apiKeys.anthropic.slice(-4) : '',
           gemini: requestBody.apiKeys.gemini ? 'AIza...' + requestBody.apiKeys.gemini.slice(-4) : '',
