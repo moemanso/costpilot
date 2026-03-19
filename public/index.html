@@ -1000,7 +1000,13 @@
         apiKeys.gemini = geminiKey;
         localStorage.setItem('costpilot_apikey_gemini', geminiKey);
       }
-      if (openrouterKey && openrouterKey.startsWith('sk-or-')) {
+      // Accept various OpenRouter key formats: sk-or-, sk-or-v1-, etc.
+      if (openrouterKey && (openrouterKey.startsWith('sk-or-') || openrouterKey.startsWith('sk-or-v1-'))) {
+        apiKeys.openrouter = openrouterKey;
+        localStorage.setItem('costpilot_apikey_openrouter', openrouterKey);
+      } else if (openrouterKey && openrouterKey.startsWith('sk-')) {
+        // For other sk- keys, check if it might be OpenRouter (user intends it to be)
+        // Store as openrouter if it's not matching other providers
         apiKeys.openrouter = openrouterKey;
         localStorage.setItem('costpilot_apikey_openrouter', openrouterKey);
       }

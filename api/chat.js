@@ -169,16 +169,45 @@ module.exports = async function handler(req, res) {
     }
     sessions.set(regularSessionId, session);
     
-    // Get the first available API key
+    // Detect provider and get the appropriate API key based on key format
+    let provider = 'openai';
+    let model = 'gpt-4o-mini';
     let activeApiKey = '';
+    
     if (typeof apiKeys === 'object') {
-      activeApiKey = apiKeys.openai || apiKeys.anthropic || apiKeys.google || apiKeys.openrouter || '';
+      // Check each key for known prefixes to detect provider
+      // Priority: OpenRouter > Anthropic > Google > OpenAI
+      if (apiKeys.openrouter && (apiKeys.openrouter.startsWith('sk-or-') || apiKeys.openrouter.startsWith('sk-or-v1-'))) {
+        provider = 'openrouter';
+        activeApiKey = apiKeys.openrouter;
+      } else if (apiKeys.anthropic && apiKeys.anthropic.startsWith('sk-ant-')) {
+        provider = 'anthropic';
+        activeApiKey = apiKeys.anthropic;
+      } else if (apiKeys.google && apiKeys.google.startsWith('AIza')) {
+        provider = 'google';
+        activeApiKey = apiKeys.google;
+      } else if (apiKeys.openai && apiKeys.openai.startsWith('sk-')) {
+        provider = 'openai';
+        activeApiKey = apiKeys.openai;
+      } else {
+        // Fallback: use first non-empty key
+        activeApiKey = apiKeys.openai || apiKeys.anthropic || apiKeys.google || apiKeys.openrouter || '';
+      }
     } else {
-      activeApiKey = apiKeys;
+      // Single key string - detect provider from format
+      activeApiKey = apiKeys || '';
+      if (activeApiKey.startsWith('sk-or-') || activeApiKey.startsWith('sk-or-v1-')) {
+        provider = 'openrouter';
+      } else if (activeApiKey.startsWith('sk-ant-')) {
+        provider = 'anthropic';
+      } else if (activeApiKey.startsWith('AIza')) {
+        provider = 'google';
+      }
+      // Default remains 'openai' for sk- keys
     }
     
-    // Update API key if provided
-    if (JSON.stringify(apiKeys) !== JSON.stringify(session.apiKeys)) {
+    // Update session API keys if provided
+    if (apiKeys && JSON.stringify(apiKeys) !== JSON.stringify(session.apiKeys)) {
       session.apiKeys = apiKeys;
     }
     
@@ -195,22 +224,14 @@ module.exports = async function handler(req, res) {
     // Determine complexity and select model
     const complexity = analyzeComplexity(message);
     
-    // Detect which provider to use based on API key
-    let provider = 'openai';
-    let model = 'gpt-4o-mini';
-    
-    if (activeApiKey.startsWith('sk-or-')) {
-      provider = 'openrouter';
-      model = 'openai/gpt-4o-mini'; // OpenRouter model ID
-    } else if (activeApiKey.startsWith('sk-ant-')) {
-      provider = 'anthropic';
+    // Set model based on detected provider
+    if (provider === 'openrouter') {
+      model = 'openai/gpt-4o-mini';
+    } else if (provider === 'anthropic') {
       model = 'claude-3-haiku-20240307';
-    } else if (activeApiKey.startsWith('AIza')) {
-      provider = 'google';
+    } else if (provider === 'google') {
       model = 'gemini-1.5-pro';
     } else {
-      // Default to OpenAI
-      provider = 'openai';
       model = 'gpt-4o-mini';
     }
     
