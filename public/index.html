@@ -886,11 +886,11 @@
     
     <div class="input-area">
       <div class="input-row">
-        <input type="text" id="messageInput" placeholder="Ask me anything... (Ctrl+Enter to send)" onkeydown="handleKeyPress(event)" />
+        <input type="text" id="messageInput" placeholder="Ask me anything... (Press Enter to send)" onkeydown="handleKeyPress(event)" />
         <button onclick="sendMessage()" id="sendBtn">Send</button>
       </div>
       <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.5rem; text-align: right;">
-        💡 Tip: Press Ctrl+Enter or Cmd+Enter to send quickly
+        💡 Tip: Press Enter to send, Shift+Enter for new line
       </div>
     </div>
   </div>
@@ -1025,8 +1025,8 @@
     }
     
     function handleKeyPress(e) {
-      // Cmd+Enter (Mac) or Ctrl+Enter (Windows/Linux) to send
-      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      // Enter to send (plain Enter or with Cmd/Ctrl for multiline)
+      if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
       }
