@@ -272,13 +272,14 @@ module.exports = async function handler(req, res) {
     
     if (!response.ok) {
       const errorData = await response.json();
-      const errorMessage = errorData.error?.message || 'API request failed';
+      const errorMessage = errorData.error?.message || errorData.message || 'API request failed';
       
       // Better error classification
-      if (response.status === 401 || errorMessage.includes('invalid API key')) {
+      if (response.status === 401 || errorMessage.includes('invalid') || errorMessage.includes('Incorrect')) {
         return res.status(401).json({ 
-          error: 'Invalid API key. Please check your OpenAI API key and try again.',
-          errorType: 'invalid_api_key'
+          error: `Invalid API key for ${provider}. Please check your ${provider === 'openrouter' ? 'OpenRouter' : provider === 'anthropic' ? 'Anthropic' : provider === 'google' ? 'Google' : 'OpenAI'} API key and try again.`,
+          errorType: 'invalid_api_key',
+          provider: provider
         });
       }
       
