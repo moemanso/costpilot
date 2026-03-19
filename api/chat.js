@@ -98,8 +98,13 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Message is required' });
     }
     
+    // Support both apiKey (singular) and apiKeys (object with multiple providers)
+    const apiKeys = apiKey || req.body.apiKeys || {};
+    const hasApiKey = (typeof apiKeys === 'string' && apiKeys.trim()) || 
+                      (typeof apiKeys === 'object' && Object.values(apiKeys).some(k => k && k.trim()));
+    
     // Fallback to demo mode if no API key provided
-    if (!apiKey?.trim()) {
+    if (!hasApiKey) {
       // Get or create demo session
       const demoSessionId = 'demo_' + (sessionId || 'default');
       let session = sessions.get(demoSessionId);
@@ -159,14 +164,22 @@ module.exports = async function handler(req, res) {
         totalSpent: 0,
         totalSaved: 0,
         budget: budget || DEFAULT_BUDGET,
-        apiKey: apiKey
+        apiKeys: apiKeys
       };
     }
     sessions.set(regularSessionId, session);
     
+    // Get the first available API key
+    let activeApiKey = '';
+    if (typeof apiKeys === 'object') {
+      activeApiKey = apiKeys.openai || apiKeys.anthropic || apiKeys.google || apiKeys.openrouter || '';
+    } else {
+      activeApiKey = apiKeys;
+    }
+    
     // Update API key if provided
-    if (apiKey !== session.apiKey) {
-      session.apiKey = apiKey;
+    if (JSON.stringify(apiKeys) !== JSON.stringify(session.apiKeys)) {
+      session.apiKeys = apiKeys;
     }
     
     // Check budget before making API call
@@ -194,7 +207,7 @@ module.exports = async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${activeApiKey}`
       },
       body: JSON.stringify({
         model: selectedModel.model,
