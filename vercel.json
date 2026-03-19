@@ -1,12 +1,9 @@
 {
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/chat", "destination": "/public/index.html" },
-    { "source": "/dashboard", "destination": "/public/dashboard.html" },
-    { "source": "/settings", "destination": "/public/settings.html" },
-    { "source": "/chat/(.*)", "destination": "/public/index.html" },
-    { "source": "/dashboard/(.*)", "destination": "/public/dashboard.html" },
-    { "source": "/settings/(.*)", "destination": "/public/settings.html" },
-    { "source": "/(.*)", "destination": "/public/landing.html" }
+    { "source": "/chat(/.*)?", "destination": "/index.html" },
+    { "source": "/dashboard(/.*)?", "destination": "/dashboard.html" },
+    { "source": "/settings(/.*)?", "destination": "/settings.html" },
+    { "source": "/(:path)", "destination": "/landing.html" }
   ]
 }
