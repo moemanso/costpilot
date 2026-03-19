@@ -1,9 +1,9 @@
 {
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/chat", "dest": "/public/index.html" },
-    { "source": "/dashboard", "dest": "/public/dashboard.html" },
-    { "source": "/settings", "dest": "/public/settings.html" },
-    { "source": "/(.*)", "dest": "/public/$1" }
+    { "source": "/chat", "destination": "/public/index.html" },
+    { "source": "/dashboard", "destination": "/public/dashboard.html" },
+    { "source": "/settings", "destination": "/public/settings.html" },
+    { "source": "/(.*)", "destination": "/public/$1" }
   ]
 }
